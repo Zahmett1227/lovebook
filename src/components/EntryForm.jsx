@@ -1,22 +1,14 @@
 import { useState } from 'react';
-import { MOOD_OPTIONS } from '../config/appConfig';
+import { MEMORY_TAGS, normalizeMemoryTagId } from '../config/memoryTags';
 import ImageUploader from './ImageUploader';
 import { uploadImages } from '../services/storageService';
-
-const MOOD_CHIP_STYLE = {
-  happy: 'bg-[#fff5c7] text-[#7a5a00] border-[#f3de82]',
-  miss: 'bg-[#e7f0ff] text-[#2f4f8c] border-[#b9ccf0]',
-  funny: 'bg-[#efe9ff] text-[#5d4391] border-[#d0bff3]',
-  travel: 'bg-[#e8f8ff] text-[#2a6077] border-[#b8dff0]',
-  special: 'bg-[#ffecee] text-[#8c3f4d] border-[#f0bfca]',
-  surprise: 'bg-[#fff0da] text-[#8b5a2b] border-[#edc89a]',
-  heart: 'bg-[#ffe9ee] text-[#913e53] border-[#f0bfd0]',
-};
 
 export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }) {
   const [title, setTitle]   = useState(initial?.title ?? '');
   const [text, setText]     = useState(initial?.text ?? '');
-  const [mood, setMood]     = useState(initial?.mood ?? '');
+  const [selectedTag, setSelectedTag] = useState(
+    normalizeMemoryTagId(initial?.tag || initial?.mood || '')
+  );
   const [images, setImages] = useState(initial?.imageUrls ?? []);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving]       = useState(false);
@@ -47,7 +39,14 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
     setSaving(true);
     try {
       // onSave handles its own error state and logging
-      await onSave({ title: title.trim(), text: text.trim(), mood, imageUrls: images });
+      await onSave({
+        title: title.trim(),
+        text: text.trim(),
+        tag: selectedTag || '',
+        // Backward compatibility for existing reads expecting mood.
+        mood: selectedTag || '',
+        imageUrls: images,
+      });
     } finally {
       setSaving(false);
     }
@@ -78,18 +77,18 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
       />
 
       <div className="flex flex-wrap gap-2">
-        {MOOD_OPTIONS.map((m) => (
+        {MEMORY_TAGS.map((tag) => (
           <button
-            key={m.value}
+            key={tag.id}
             type="button"
-            onClick={() => setMood(mood === m.value ? '' : m.value)}
+            onClick={() => setSelectedTag(selectedTag === tag.id ? '' : tag.id)}
             className={`text-sm min-h-[44px] rounded-full px-3 border active:scale-[0.98] transition ${
-              mood === m.value
-                ? `${MOOD_CHIP_STYLE[m.value] ?? 'bg-[#1f6b4b] text-white border-[#1f6b4b]'} shadow-sm`
+              selectedTag === tag.id
+                ? `${tag.color} shadow-sm`
                 : 'bg-white text-[#2e664c] border-[#cbe3d5] hover:border-[#7bb395]'
             }`}
           >
-            {m.emoji} {m.label}
+            {tag.emoji} {tag.label}
           </button>
         ))}
       </div>

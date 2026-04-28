@@ -21,8 +21,15 @@ function AppContent() {
   const pendingYear = useRef(null);
 
   const { selectedDate, selectDate, clearDate } = useSelectedDate();
-  const { datesWithContent, refresh: refreshYear } = useYearEntries(year);
+  const { entries: yearEntries, datesWithContent, refresh: refreshYear } = useYearEntries(year);
   const { entries: dayEntries, loading: dayLoading, refresh: refreshDay } = useDayEntries(selectedDate);
+
+  const entriesByDate = yearEntries.reduce((acc, entry) => {
+    if (!entry?.date) return acc;
+    if (!acc[entry.date]) acc[entry.date] = [];
+    acc[entry.date].push(entry);
+    return acc;
+  }, {});
 
   const isAnimating = pageAnim !== null;
 
@@ -86,6 +93,7 @@ function AppContent() {
           datesWithContent={datesWithContent}
           selectedDate={selectedDate}
           onSelectDate={selectDate}
+          entriesByDate={entriesByDate}
         />
       </div>
 

@@ -1,5 +1,6 @@
 import { buildMonthGrid } from '../utils/calendarUtils';
 import { MONTH_NAMES, WEEKDAY_NAMES } from '../utils/dateUtils';
+import { getMemoryTagEmoji, normalizeMemoryTagId } from '../config/memoryTags';
 import DayCell from './DayCell';
 
 const MONTH_PALETTE = [
@@ -9,7 +10,7 @@ const MONTH_PALETTE = [
   'from-[#fff1e8] to-[#eef9f2]',
 ];
 
-export default function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate }) {
+export default function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
   const cells = buildMonthGrid(year, month);
   const paletteClass = MONTH_PALETTE[(month - 1) % MONTH_PALETTE.length];
 
@@ -40,6 +41,7 @@ export default function MonthCalendar({ year, month, datesWithContent, selectedD
               hasContent={datesWithContent.has(cell.dateKey)}
               isSelected={selectedDate === cell.dateKey}
               onClick={onSelectDate}
+              emojis={getDayEmojis(entriesByDate?.[cell.dateKey] ?? [])}
             />
           ) : (
             <div key={`empty-${i}`} className="h-11 min-h-[44px]" />
@@ -48,4 +50,14 @@ export default function MonthCalendar({ year, month, datesWithContent, selectedD
       </div>
     </div>
   );
+}
+
+function getDayEmojis(entries) {
+  const uniqueTags = [...new Set(
+    entries
+      .map((entry) => normalizeMemoryTagId(entry.tag || entry.mood || null))
+      .filter(Boolean)
+  )];
+
+  return uniqueTags.map(getMemoryTagEmoji).slice(0, 3);
 }

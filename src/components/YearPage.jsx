@@ -3,8 +3,8 @@ import MonthCalendar from './MonthCalendar';
 const LEFT_MONTHS  = [1, 2, 3, 4, 5, 6];
 const RIGHT_MONTHS = [7, 8, 9, 10, 11, 12];
 
-export default function YearPage({ year, datesWithContent, selectedDate, onSelectDate }) {
-  const calendarProps = { year, datesWithContent, selectedDate, onSelectDate };
+export default function YearPage({ year, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
+  const calendarProps = { year, datesWithContent, selectedDate, onSelectDate, entriesByDate };
 
   return (
     <>

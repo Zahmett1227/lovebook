@@ -1,6 +1,6 @@
 import { isToday } from '../utils/dateUtils';
 
-export default function DayCell({ dateKey, day, hasContent, isSelected, onClick }) {
+export default function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [] }) {
   if (!dateKey) {
     return <div className="aspect-square" />;
   }
@@ -22,10 +22,16 @@ export default function DayCell({ dateKey, day, hasContent, isSelected, onClick 
       `}
     >
       <span>{day}</span>
-      {hasContent && !isSelected && (
+      {emojis.length > 0 ? (
+        <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[11px] leading-none max-w-full overflow-hidden">
+          {emojis.map((emoji, index) => (
+            <span key={`${dateKey}-${emoji}-${index}`}>{emoji}</span>
+          ))}
+        </div>
+      ) : hasContent && !isSelected && (
         <span className="w-1.5 h-1.5 rounded-full bg-[#1f6b4b] opacity-80" />
       )}
-      {hasContent && isSelected && (
+      {emojis.length === 0 && hasContent && isSelected && (
         <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
       )}
     </button>
