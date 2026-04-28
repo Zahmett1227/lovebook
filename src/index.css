@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f0e6d8 0%, #e8d9c8 50%, #dfd0be 100%);
+  min-height: 100vh;
+  color: #3d2b1f;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* ─── Page-flip animations ─── */
+
+/* Forward: current page curls left, new page arrives from right */
+@keyframes pageExitForward {
+  0%   { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+  100% { opacity: 0; transform: perspective(1400px) rotateY(-14deg) translateX(-3%); }
+}
+@keyframes pageEnterForward {
+  0%   { opacity: 0; transform: perspective(1400px) rotateY(14deg) translateX(3%); }
+  100% { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+}
+
+/* Backward: current page curls right, new page arrives from left */
+@keyframes pageExitBack {
+  0%   { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+  100% { opacity: 0; transform: perspective(1400px) rotateY(14deg) translateX(3%); }
+}
+@keyframes pageEnterBack {
+  0%   { opacity: 0; transform: perspective(1400px) rotateY(-14deg) translateX(-3%); }
+  100% { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+}
+
+.page-exit-forward  { animation: pageExitForward  0.30s ease-in  forwards; }
+.page-enter-forward { animation: pageEnterForward 0.35s ease-out forwards; }
+.page-exit-back     { animation: pageExitBack     0.30s ease-in  forwards; }
+.page-enter-back    { animation: pageEnterBack    0.35s ease-out forwards; }
+
+/* ─── Book spine shadow (applied inside YearPage) ─── */
+.book-spine {
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.07) 0%,
+    rgba(0,0,0,0.03) 35%,
+    rgba(0,0,0,0.03) 65%,
+    rgba(0,0,0,0.07) 100%
+  );
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c9a98a; border-radius: 3px; }
+
+/* ─── Day cell ─── */
+.day-cell:hover { transform: scale(1.08); }
+
+/* ─── Lightbox ─── */
+.lightbox-overlay { backdrop-filter: blur(4px); }
