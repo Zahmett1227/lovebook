@@ -1,4 +1,4 @@
-export const START_YEAR = 2024;
+export const START_YEAR = 2026;
 
 export const ALLOWED_USERS = [
   "ahmetkarasakal184@gmail.com",
@@ -21,8 +21,9 @@ export const USER_PROFILES = {
 export const MOOD_OPTIONS = [
   { value: "happy", label: "Mutlu", emoji: "😊" },
   { value: "miss", label: "Özledim", emoji: "💙" },
-  { value: "special", label: "Özel Gün", emoji: "✨" },
-  { value: "travel", label: "Gezi", emoji: "✈️" },
   { value: "funny", label: "Komik", emoji: "😄" },
-  { value: "important", label: "Önemli", emoji: "⭐" },
+  { value: "travel", label: "Gezi", emoji: "✈️" },
+  { value: "special", label: "Özel Gün", emoji: "✨" },
+  { value: "surprise", label: "Sürpriz", emoji: "🎁" },
+  { value: "heart", label: "Kalp", emoji: "❤️" },
 ];

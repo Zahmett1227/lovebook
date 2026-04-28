@@ -1,6 +1,12 @@
 export default function BookLayout({ children }) {
   return (
-    <div className="min-h-screen py-6 px-3 sm:px-6 flex items-start justify-center">
+    <div
+      className="min-h-[100dvh] px-2 pt-3 pb-24 sm:pb-6 sm:px-6 flex items-start justify-center"
+      style={{
+        paddingTop: 'max(12px, env(safe-area-inset-top))',
+        paddingBottom: 'max(88px, env(safe-area-inset-bottom))',
+      }}
+    >
       <div className="w-full max-w-6xl relative">
 
         {/* Stacked-pages shadow — depth illusion */}
@@ -9,7 +15,7 @@ export default function BookLayout({ children }) {
           style={{
             inset: 0,
             transform: 'translate(6px, 8px)',
-            background: '#d4b896',
+            background: '#7cae94',
             opacity: 0.45,
             borderRadius: '1.5rem',
           }}
@@ -19,7 +25,7 @@ export default function BookLayout({ children }) {
           style={{
             inset: 0,
             transform: 'translate(3px, 4px)',
-            background: '#e2c9a8',
+            background: '#98c6ae',
             opacity: 0.6,
             borderRadius: '1.5rem',
           }}
@@ -27,9 +33,9 @@ export default function BookLayout({ children }) {
 
         {/* Main book body */}
         <div
-          className="relative bg-[#fdfaf5] rounded-2xl overflow-hidden"
+          className="relative bg-[#f6fdf9] rounded-2xl overflow-hidden"
           style={{
-            minHeight: '90vh',
+            minHeight: 'calc(100dvh - 24px)',
             boxShadow:
               '-10px 0 30px rgba(0,0,0,0.10), ' +
               '10px 0  30px rgba(0,0,0,0.10), ' +

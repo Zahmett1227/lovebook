@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Manrope:wght@500;700;800&family=Outfit:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,20 +8,44 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
-  background: linear-gradient(135deg, #f0e6d8 0%, #e8d9c8 50%, #dfd0be 100%);
-  min-height: 100vh;
-  color: #3d2b1f;
+  background: linear-gradient(135deg, #dff1e6 0%, #c9e7d4 52%, #afd8c1 100%);
+  min-height: 100dvh;
+  color: #163829;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-#root {
-  min-height: 100vh;
+input,
+textarea,
+select,
+button {
+  font-size: 16px;
 }
 
 .font-display {
   font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-hero-title {
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+}
+
+.font-hero-sub {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
 }
 
 /* ─── Page-flip animations ─── */
@@ -65,10 +89,11 @@ body {
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c9a98a; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #4f8b6e; border-radius: 3px; }
 
 /* ─── Day cell ─── */
-.day-cell:hover { transform: scale(1.08); }
+.day-cell:hover { transform: scale(1.04); }
+.day-cell:active { transform: scale(0.98); }
 
 /* ─── Lightbox ─── */
 .lightbox-overlay { backdrop-filter: blur(4px); }

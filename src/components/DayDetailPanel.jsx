@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDateDisplay } from '../utils/dateUtils';
 import { addEntry, updateEntry, deleteEntry } from '../services/entryService';
 import { useAuth } from '../hooks/useAuth';
@@ -8,11 +8,12 @@ import EntryForm from './EntryForm';
 import EmptyState from './EmptyState';
 import LoadingSpinner from './LoadingSpinner';
 
-export default function DayDetailPanel({ dateKey, entries, loading, onClose, onRefresh }) {
+export default function DayDetailPanel({ dateKey, entries, loading, onClose, onRefresh, openComposerSignal = 0 }) {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [saveError, setSaveError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const [year, month, day] = dateKey.split('-').map(Number);
 
@@ -23,6 +24,19 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
 
   const leftEntries  = entries.filter((e) => e.userEmail === leftEmail);
   const rightEntries = entries.filter((e) => e.userEmail === rightEmail);
+
+  useEffect(() => {
+    if (!openComposerSignal) return;
+    setEditingEntry(null);
+    setSaveError('');
+    setShowForm(true);
+  }, [openComposerSignal]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = window.setTimeout(() => setSuccessMessage(''), 2200);
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
 
   async function handleSave(data) {
     setSaveError('');
@@ -38,8 +52,10 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
     try {
       if (editingEntry) {
         await updateEntry(editingEntry.id, data);
+        setSuccessMessage('Ani guncellendi.');
       } else {
         await addEntry(entryData);
+        setSuccessMessage('Yeni ani eklendi.');
       }
       setShowForm(false);
       setEditingEntry(null);
@@ -74,31 +90,42 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
 
   return (
     <div className="fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-[#fdfaf5] w-full sm:max-w-3xl sm:rounded-2xl shadow-book border border-[#e0cdb8] flex flex-col max-h-screen sm:max-h-[90vh]">
+      <div
+        className="bg-[#f7fdf9] w-full sm:max-w-4xl rounded-t-3xl sm:rounded-2xl shadow-book border border-[#cbe3d5] flex flex-col max-h-[100dvh] sm:max-h-[90dvh]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#e8d5c0] shrink-0">
-          <h2 className="font-display text-lg font-semibold text-[#3d2b1f]">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-[#cbe3d5] shrink-0 bg-[#edf9f2]">
+          <h2 className="font-display text-lg font-semibold text-[#174330]">
             {formatDateDisplay(dateKey)}
           </h2>
           <div className="flex items-center gap-3">
             {!showForm && (
               <button
                 onClick={() => { setEditingEntry(null); setSaveError(''); setShowForm(true); }}
-                className="text-xs bg-[#a0704a] hover:bg-[#8a5e3c] text-white rounded-lg px-3 py-1.5 transition-colors"
+                className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white rounded-full px-4 min-h-[44px] active:scale-[0.98] transition"
               >
                 + Anı Ekle
               </button>
             )}
-            <button onClick={onClose} className="text-[#b09080] hover:text-[#5c3d2a] text-xl leading-none">
+            <button onClick={onClose} className="text-[#6e9f87] hover:text-[#1f6b4b] text-2xl leading-none w-11 h-11 rounded-full active:scale-[0.98] transition">
               ×
             </button>
           </div>
         </div>
 
+        {successMessage && (
+          <div className="px-4 pt-3 shrink-0">
+            <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2">
+              {successMessage}
+            </p>
+          </div>
+        )}
+
         {/* Form */}
         {showForm && (
-          <div className="px-5 py-4 border-b border-[#e8d5c0] shrink-0 space-y-2">
+          <div className="px-4 sm:px-5 py-4 border-b border-[#cbe3d5] shrink-0 space-y-2 bg-white/80">
             {saveError && (
               <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                 {saveError}
@@ -119,17 +146,19 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
           {loading ? (
             <LoadingSpinner message="Anılar yükleniyor…" />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e8d5c0]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#cbe3d5]">
               {/* Left */}
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <span className="text-xs font-semibold text-[#6b5040] uppercase tracking-wide">
+                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-gradient-to-r from-[#e8f6ee] to-[#e7f0ff] border border-[#c5e1d1] px-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2d7b58] to-[#3f8e6a] text-white text-xs flex items-center justify-center">
+                    {leftProfile.displayName?.[0] ?? 'A'}
+                  </div>
+                  <span className="text-xs font-semibold text-[#2a5f45] uppercase tracking-wide">
                     {leftProfile.displayName}
                   </span>
                 </div>
                 {leftEntries.length === 0
-                  ? <EmptyState message="Henüz anı eklenmemiş." />
+                  ? <EmptyState message="Bu güne henüz anı bırakmamışız. İlk notu sen ekle." />
                   : leftEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
                         isOwner={user.email === e.userEmail}
@@ -140,14 +169,16 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
 
               {/* Right */}
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-                  <span className="text-xs font-semibold text-[#6b5040] uppercase tracking-wide">
+                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-gradient-to-r from-[#e6f4ec] to-[#efe9ff] border border-[#c5e1d1] px-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4a9b76] to-[#629fda] text-white text-xs flex items-center justify-center">
+                    {rightProfile.displayName?.[0] ?? 'T'}
+                  </div>
+                  <span className="text-xs font-semibold text-[#2a5f45] uppercase tracking-wide">
                     {rightProfile.displayName}
                   </span>
                 </div>
                 {rightEntries.length === 0
-                  ? <EmptyState message="Henüz anı eklenmemiş." />
+                  ? <EmptyState message="Bu güne henüz anı bırakmamışız. İlk notu sen ekle." />
                   : rightEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
                         isOwner={user.email === e.userEmail}
