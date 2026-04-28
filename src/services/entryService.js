@@ -34,6 +34,13 @@ export async function getEntriesByDate(dateStr) {
   return sortByCreatedAt(docs);
 }
 
+export async function getAllEntries() {
+  const snap = await getDocs(collection(db, COLLECTION));
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  console.log('[FIRESTORE_READ] getAllEntries →', docs.length, 'entries');
+  return sortByCreatedAt(docs);
+}
+
 export async function addEntry(entry) {
   const docRef = await addDoc(collection(db, COLLECTION), {
     ...entry,

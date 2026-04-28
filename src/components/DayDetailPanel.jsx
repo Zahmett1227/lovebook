@@ -1,29 +1,44 @@
 import { useEffect, useState } from 'react';
-import { formatDateDisplay } from '../utils/dateUtils';
+import { formatDateDisplay, normalizeDateKey } from '../utils/dateUtils';
 import { addEntry, updateEntry, deleteEntry } from '../services/entryService';
 import { useAuth } from '../hooks/useAuth';
 import { USER_PROFILES, ALLOWED_USERS } from '../config/appConfig';
+import { normalizeMemoryTagId } from '../config/memoryTags';
 import EntryCard from './EntryCard';
 import EntryForm from './EntryForm';
 import EmptyState from './EmptyState';
 import LoadingSpinner from './LoadingSpinner';
 
-export default function DayDetailPanel({ dateKey, entries, loading, onClose, onRefresh, openComposerSignal = 0 }) {
+export default function DayDetailPanel({
+  dateKey,
+  entries,
+  loading,
+  onClose,
+  onRefresh,
+  openComposerSignal = 0,
+  activeTagFilter = 'all',
+}) {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [saveError, setSaveError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [year, month, day] = dateKey.split('-').map(Number);
-
+  const safeDateKey = normalizeDateKey(dateKey);
+  const [year, month, day] = (safeDateKey || '1970-01-01').split('-').map(Number);
   const leftEmail  = ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'left');
   const rightEmail = ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'right');
   const leftProfile  = USER_PROFILES[leftEmail]  ?? { displayName: 'Kullanıcı 1' };
   const rightProfile = USER_PROFILES[rightEmail] ?? { displayName: 'Kullanıcı 2' };
 
-  const leftEntries  = entries.filter((e) => e.userEmail === leftEmail);
-  const rightEntries = entries.filter((e) => e.userEmail === rightEmail);
+  const tagFilteredEntries = activeTagFilter === 'all'
+    ? entries
+    : entries.filter(
+        (e) => normalizeMemoryTagId(e.tag || e.mood || null) === activeTagFilter
+      );
+
+  const leftEntries  = tagFilteredEntries.filter((e) => e.userEmail === leftEmail);
+  const rightEntries = tagFilteredEntries.filter((e) => e.userEmail === rightEmail);
 
   useEffect(() => {
     if (!openComposerSignal) return;
@@ -73,6 +88,15 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
       onRefresh();
     } catch (err) {
       console.error('[FIRESTORE_DELETE_ERROR]', err.message);
+    }
+  }
+
+  async function handleToggleFavorite(entry) {
+    try {
+      await updateEntry(entry.id, { favorite: !entry.favorite });
+      onRefresh();
+    } catch (err) {
+      console.error('[FIRESTORE_UPDATE_ERROR] favorite:', err.message);
     }
   }
 
@@ -158,11 +182,14 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
                   </span>
                 </div>
                 {leftEntries.length === 0
-                  ? <EmptyState message="Bu güne henüz anı bırakmamışız. İlk notu sen ekle." />
+                  ? <EmptyState message={activeTagFilter === 'all' ? 'Bu güne henüz anı bırakmamışız. İlk notu sen ekle.' : 'Bu etikete ait anı bulunamadı.'} />
                   : leftEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
                         isOwner={user.email === e.userEmail}
-                        onEdit={startEdit} onDelete={handleDelete} />
+                        onEdit={startEdit}
+                        onDelete={handleDelete}
+                        onToggleFavorite={handleToggleFavorite}
+                      />
                     ))
                 }
               </div>
@@ -178,11 +205,14 @@ export default function DayDetailPanel({ dateKey, entries, loading, onClose, onR
                   </span>
                 </div>
                 {rightEntries.length === 0
-                  ? <EmptyState message="Bu güne henüz anı bırakmamışız. İlk notu sen ekle." />
+                  ? <EmptyState message={activeTagFilter === 'all' ? 'Bu güne henüz anı bırakmamışız. İlk notu sen ekle.' : 'Bu etikete ait anı bulunamadı.'} />
                   : rightEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
                         isOwner={user.email === e.userEmail}
-                        onEdit={startEdit} onDelete={handleDelete} />
+                        onEdit={startEdit}
+                        onDelete={handleDelete}
+                        onToggleFavorite={handleToggleFavorite}
+                      />
                     ))
                 }
               </div>

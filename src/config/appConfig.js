@@ -1,4 +1,5 @@
-export const START_YEAR = 2026;
+export const INITIAL_YEAR = 2026;
+export const MIN_YEAR = 2025;
 
 export const ALLOWED_USERS = [
   "ahmetkarasakal184@gmail.com",

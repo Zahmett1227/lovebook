@@ -1,8 +1,20 @@
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
+export function normalizeDateKey(value) {
+  if (typeof value !== 'string') return null;
+  const match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const normalized = `${year}-${String(Number(month)).padStart(2, '0')}-${String(Number(day)).padStart(2, '0')}`;
+  const date = parseISO(normalized);
+  return Number.isNaN(date.getTime()) ? null : normalized;
+}
+
 export function formatDateDisplay(dateStr) {
-  const date = parseISO(dateStr);
+  const normalized = normalizeDateKey(dateStr);
+  if (!normalized) return 'Geçersiz tarih';
+  const date = parseISO(normalized);
   return format(date, 'd MMMM yyyy', { locale: tr });
 }
 

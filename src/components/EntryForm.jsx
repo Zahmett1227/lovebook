@@ -45,6 +45,7 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
         tag: selectedTag || '',
         // Backward compatibility for existing reads expecting mood.
         mood: selectedTag || '',
+        favorite: initial?.favorite ?? false,
         imageUrls: images,
       });
     } finally {

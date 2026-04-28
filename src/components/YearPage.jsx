@@ -1,9 +1,18 @@
 import MonthCalendar from './MonthCalendar';
+import { MEMORY_TAGS } from '../config/memoryTags';
 
 const LEFT_MONTHS  = [1, 2, 3, 4, 5, 6];
 const RIGHT_MONTHS = [7, 8, 9, 10, 11, 12];
 
-export default function YearPage({ year, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
+export default function YearPage({
+  year,
+  datesWithContent,
+  selectedDate,
+  onSelectDate,
+  entriesByDate,
+  activeTagFilter = 'all',
+  onTagFilterChange,
+}) {
   const calendarProps = { year, datesWithContent, selectedDate, onSelectDate, entriesByDate };
 
   return (
@@ -15,6 +24,24 @@ export default function YearPage({ year, datesWithContent, selectedDate, onSelec
           <p className="font-hero-sub text-xs uppercase tracking-[0.2em] text-[#4f8f74] relative text-center">Bizim Günlüğümüz</p>
           <h2 className="font-hero-title text-3xl sm:text-[2.1rem] font-extrabold text-[#0f4f37] leading-tight mt-1 text-center">{year}</h2>
           <p className="font-hero-sub text-sm sm:text-[15px] text-[#2d7c59] mt-1 relative text-center">Bugün yeni bir anı ekleyelim mi?</p>
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-6 pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <FilterChip
+            active={activeTagFilter === 'all'}
+            onClick={() => onTagFilterChange?.('all')}
+            label="Tümü"
+          />
+          {MEMORY_TAGS.map((tag) => (
+            <FilterChip
+              key={tag.id}
+              active={activeTagFilter === tag.id}
+              onClick={() => onTagFilterChange?.(tag.id)}
+              label={`${tag.emoji} ${tag.label}`}
+            />
+          ))}
         </div>
       </div>
 
@@ -95,6 +122,21 @@ export default function YearPage({ year, datesWithContent, selectedDate, onSelec
         </div>
       </div>
     </>
+  );
+}
+
+function FilterChip({ active, onClick, label }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-xs whitespace-nowrap rounded-full border px-3 min-h-[36px] transition active:scale-[0.98] ${
+        active
+          ? 'bg-[#1f6b4b] border-[#1f6b4b] text-white'
+          : 'bg-white/90 border-[#cbe3d5] text-[#2a5f45] hover:bg-[#edf8f2]'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

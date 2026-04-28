@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { getMemoryTagById, normalizeMemoryTagId } from '../config/memoryTags';
 import ImageLightbox from './ImageLightbox';
 
-export default function EntryCard({ entry, isOwner, onEdit, onDelete }) {
+export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFavorite }) {
   const [lightbox, setLightbox] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -20,8 +20,17 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete }) {
           <span className="text-sm font-semibold text-[#174330]">{entry.userDisplayName}</span>
           <span className="text-[11px] text-[#77a58f]">{createdTime}</span>
         </div>
-        {isOwner && (
-          <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => onToggleFavorite?.(entry)}
+            className="text-sm px-2 min-h-[32px] rounded-xl hover:bg-[#edf8f2] transition-colors"
+            aria-label={entry.favorite ? 'Favoriden çıkar' : 'Favoriye ekle'}
+            title={entry.favorite ? 'Favoriden çıkar' : 'Favoriye ekle'}
+          >
+            {entry.favorite ? '⭐' : '☆'}
+          </button>
+          {isOwner && (
+            <div className="flex items-center gap-1">
             <button
               onClick={() => onEdit(entry)}
               className="text-xs text-[#6e9f87] hover:text-[#1f6b4b] px-2 min-h-[32px] rounded-xl hover:bg-[#edf8f2] transition-colors"
@@ -51,8 +60,9 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete }) {
                 ×
               </button>
             )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Text */}

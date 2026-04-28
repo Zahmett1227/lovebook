@@ -1,4 +1,4 @@
-import { START_YEAR } from '../config/appConfig';
+import { MIN_YEAR } from '../config/appConfig';
 import { logout } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
 import { USER_PROFILES } from '../config/appConfig';
@@ -27,7 +27,7 @@ export default function YearNavigation({ year, onPrev, onNext, disabled }) {
       <div className="flex items-center gap-3">
         <button
           onClick={onPrev}
-          disabled={disabled || year <= START_YEAR}
+          disabled={disabled || year <= MIN_YEAR}
           className="w-11 h-11 min-h-[44px] rounded-full flex items-center justify-center text-lg text-[#2f6b51] hover:bg-[#ddefe3] active:scale-[0.98] disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none"
           aria-label="Önceki yıl"
         >
