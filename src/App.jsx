@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { START_YEAR } from './config/appConfig';
 import { useSelectedDate } from './hooks/useSelectedDate';
 import { useYearEntries, useDayEntries } from './hooks/useEntries';
-import { todayKey } from './utils/dateUtils';
 import ProtectedRoute from './components/ProtectedRoute';
 import BookLayout from './components/BookLayout';
 import YearNavigation from './components/YearNavigation';
@@ -19,7 +18,6 @@ const ANIM_CLASS = {
 function AppContent() {
   const [year, setYear]       = useState(START_YEAR);
   const [pageAnim, setPageAnim] = useState(null); // null | 'exit-forward' | 'exit-back' | 'enter-forward' | 'enter-back'
-  const [openComposerSignal, setOpenComposerSignal] = useState(0);
   const pendingYear = useRef(null);
 
   const { selectedDate, selectDate, clearDate } = useSelectedDate();
@@ -56,22 +54,6 @@ function AppContent() {
   function handleRefresh() {
     refreshYear();
     refreshDay();
-  }
-
-  function goToday() {
-    const today = todayKey();
-    const [todayYear] = today.split('-').map(Number);
-    setYear(todayYear);
-    selectDate(today);
-  }
-
-  function openNewEntry() {
-    goToday();
-    setOpenComposerSignal((s) => s + 1);
-  }
-
-  function scrollTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return (
@@ -114,41 +96,8 @@ function AppContent() {
           loading={dayLoading}
           onClose={clearDate}
           onRefresh={handleRefresh}
-          openComposerSignal={openComposerSignal}
         />
       )}
-
-      <div
-        className="sm:hidden fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1rem)] max-w-md rounded-3xl border border-white/60 bg-[#eff9f3]/90 shadow-lg backdrop-blur px-2 py-2"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
-      >
-        <div className="grid grid-cols-4 gap-1">
-          <button
-            onClick={goToday}
-            className="min-h-[44px] rounded-2xl text-xs text-[#26553f] active:scale-[0.98] transition"
-          >
-            Bugun
-          </button>
-          <button
-            onClick={() => clearDate()}
-            className="min-h-[44px] rounded-2xl text-xs text-[#26553f] active:scale-[0.98] transition"
-          >
-            Yil
-          </button>
-          <button
-            onClick={openNewEntry}
-            className="min-h-[44px] rounded-2xl text-xs bg-[#1f6b4b] text-white active:scale-[0.98] transition"
-          >
-            Yeni Ani
-          </button>
-          <button
-            onClick={scrollTop}
-            className="min-h-[44px] rounded-2xl text-xs text-[#26553f] active:scale-[0.98] transition"
-          >
-            Yukari
-          </button>
-        </div>
-      </div>
     </BookLayout>
   );
 }
