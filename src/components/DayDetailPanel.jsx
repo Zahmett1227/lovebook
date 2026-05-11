@@ -8,7 +8,6 @@ import { getErrorMessage } from '../utils/errorUtils';
 import EntryCard from './EntryCard';
 import EntryForm from './EntryForm';
 import EmptyState from './EmptyState';
-import LoadingSpinner from './LoadingSpinner';
 
 export default function DayDetailPanel({
   dateKey,
@@ -135,44 +134,49 @@ export default function DayDetailPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lightbox-overlay">
+    <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lightbox-overlay">
       <div
-        className="bg-lb-surface w-full sm:max-w-4xl rounded-t-3xl sm:rounded-2xl shadow-book border border-lb-border flex flex-col max-h-[100dvh] sm:max-h-[90dvh] ring-1 ring-lb-accent/15"
+        className="bg-lb-surface w-full sm:max-w-4xl rounded-t-[2rem] sm:rounded-[1.5rem] shadow-book border border-lb-border flex flex-col max-h-[100dvh] sm:max-h-[90dvh] ring-1 ring-lb-accent/15"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-
-        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-lb-border shrink-0 bg-lb-canvas/90">
-          <h2 className="font-display text-lg font-semibold text-lb-text">
-            {formatDateDisplay(dateKey)}
-          </h2>
-          <div className="flex items-center gap-3">
-            {!showForm && (
+        <div className="shrink-0 bg-lb-canvas/90">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-4">
+            <h2 className="font-display text-xl text-lb-text">{formatDateDisplay(dateKey)}</h2>
+            <div className="flex items-center gap-3">
+              {!showForm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingEntry(null);
+                    setSaveError('');
+                    setShowForm(true);
+                  }}
+                  className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px] active:scale-[0.98]"
+                >
+                  + Anı ekle
+                </button>
+              )}
+              {showForm && (
+                <button
+                  type="submit"
+                  form={formId}
+                  disabled={isSaving}
+                  className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px] disabled:opacity-50 active:scale-[0.98]"
+                >
+                  {isSaving ? 'Kaydediliyor…' : editingEntry ? 'Güncelle' : 'Kaydet'}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => { setEditingEntry(null); setSaveError(''); setShowForm(true); }}
-                className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px]"
+                onClick={onClose}
+                className="text-lb-subtext hover:text-lb-accent text-2xl w-11 h-11 rounded-full hover:bg-lb-elevated transition flex items-center justify-center active:scale-[0.98]"
+                aria-label="Kapat"
               >
-                + Anı ekle
+                ×
               </button>
-            )}
-            {showForm && (
-              <button
-                type="submit"
-                form={formId}
-                disabled={isSaving}
-                className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px] disabled:opacity-50"
-              >
-                {isSaving ? 'Kaydediliyor…' : (editingEntry ? 'Güncelle' : 'Kaydet')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-lb-subtext hover:text-lb-accent text-2xl leading-none w-11 h-11 rounded-full hover:bg-lb-elevated active:scale-[0.98] transition"
-            >
-              ×
-            </button>
+            </div>
           </div>
+          <div className="h-px w-full" style={{ background: 'var(--lb-gold-line)' }} />
         </div>
 
         {successMessage && (
@@ -220,8 +224,12 @@ export default function DayDetailPanel({
 
         <div className="flex-1 overflow-y-auto bg-lb-page/30">
           {loading ? (
-            <div className="py-12">
-              <LoadingSpinner message="Anılar yükleniyor…" />
+            <div className="flex flex-col items-center justify-center gap-3 py-16 px-4">
+              <div
+                className="w-10 h-10 border-[3px] border-lb-border border-t-lb-accent rounded-full animate-spin"
+                aria-hidden
+              />
+              <p className="text-lb-text text-sm text-center font-hero-sub">Anılar yükleniyor…</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-lb-border">
@@ -249,7 +257,7 @@ export default function DayDetailPanel({
 
               <div className="p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-2 rounded-2xl bg-lb-elevated border border-lb-border px-3 py-2">
-                  <div className="w-8 h-8 rounded-full bg-lb-accent2 text-lb-text text-xs font-bold flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-lb-accent2 text-white text-xs font-bold flex items-center justify-center">
                     {rightProfile.displayName?.[0] ?? 'T'}
                   </div>
                   <span className="text-xs font-semibold text-lb-text uppercase tracking-wide">

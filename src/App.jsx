@@ -282,7 +282,15 @@ function AppContent() {
   }
 
   return (
-    <BookLayout>
+    <BookLayout
+      mobileNav={{
+        viewMode,
+        onHome: () => setViewMode('launch'),
+        onCalendar: () => setViewMode('calendar'),
+        onAdd: goToTodayComposer,
+        onMood: () => setViewMode('review-mood'),
+      }}
+    >
       <OfflineBanner />
       <div className="border-b border-lb-border bg-gradient-to-r from-lb-canvas via-lb-elevated to-lb-canvas py-3.5 px-4 text-center relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lb-accent/40 to-transparent" />
@@ -327,27 +335,6 @@ function AppContent() {
               </div>
             )}
           </div>
-          <nav
-            className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex gap-2 border-t border-lb-border bg-lb-surface/95 backdrop-blur-lg px-3 pt-2 shadow-[0_-8px_32px_rgba(0,0,0,0.4)]"
-            style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
-            aria-label="Hızlı işlemler"
-          >
-            <button
-              type="button"
-              onClick={() => setViewMode('launch')}
-              className="flex-1 rounded-xl border border-lb-border bg-lb-elevated py-3 text-sm font-medium text-lb-text active:scale-[0.98]"
-            >
-              Menü
-            </button>
-            <button
-              type="button"
-              onClick={openRandomMemory}
-              disabled={randomLoading}
-              className="flex-1 rounded-xl border border-lb-accent/50 bg-lb-accent/20 py-3 text-sm font-semibold text-lb-accent disabled:opacity-50 active:scale-[0.98]"
-            >
-              {randomLoading ? '…' : 'Rastgele'}
-            </button>
-          </nav>
           {randomStatus && (
             <div className="md:hidden px-4 mt-1 pb-1">
               <EmptyState message={randomStatus} />
@@ -362,6 +349,8 @@ function AppContent() {
           onAddDifferentDate={goToCalendarMode}
           onReviewByDate={goToReviewDateMode}
           onReviewByMood={goToReviewMoodMode}
+          onRandomMemory={openRandomMemory}
+          randomLoading={randomLoading}
         />
       )}
 

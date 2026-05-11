@@ -28,7 +28,7 @@ function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], w
         transition-all duration-150 select-none active:scale-[0.98]
         shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]
         ${isSelected
-          ? 'bg-lb-accent border-lb-accent text-lb-page shadow-glow ring-2 ring-lb-accent/35'
+          ? 'bg-lb-accent border-lb-accent text-lb-page font-semibold shadow-[0_0_24px_rgba(227,176,92,0.4)] ring-2 ring-lb-accent/40'
           : today
           ? 'bg-lb-accent/12 border-lb-accent/50 text-lb-accent font-semibold ring-1 ring-lb-accent/25'
           : `${toneClass} border-lb-border text-lb-text hover:border-lb-accent/35 hover:bg-lb-muted/60`

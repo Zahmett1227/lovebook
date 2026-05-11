@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
 export function normalizeDateKey(value) {
@@ -31,6 +31,16 @@ export function todayKey() {
 
 export function isToday(dateStr) {
   return dateStr === todayKey();
+}
+
+/** İlişki başlangıcından bugüne kadar (her iki uç dahil) geçen gün sayısı. */
+export function daysTogetherCount(relationshipStartDateKey) {
+  const normalized = normalizeDateKey(relationshipStartDateKey);
+  if (!normalized) return 0;
+  const start = parseISO(normalized);
+  if (Number.isNaN(start.getTime())) return 0;
+  const days = differenceInCalendarDays(new Date(), start) + 1;
+  return Math.max(1, days);
 }
 
 export const MONTH_NAMES = [

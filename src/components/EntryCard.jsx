@@ -16,64 +16,65 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
     : '';
 
   return (
-    <div className="bg-lb-elevated rounded-2xl border border-lb-border p-4 space-y-3 shadow-editorial ring-1 ring-white/[0.03]">
+    <div className="polaroid-card bg-lb-elevated rounded-2xl border border-lb-border p-4 space-y-3 ring-1 ring-white/[0.04] transition-shadow duration-300 hover:shadow-[0_4px_24px_rgba(227,176,92,0.08)]">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-semibold text-lb-text">{entry.userDisplayName}</span>
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="font-semibold text-lb-text text-sm">{entry.userDisplayName}</span>
           <span className="text-[11px] text-lb-subtext">{createdTime}</span>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => onToggleFavorite?.(entry)}
-            className="text-sm px-2 min-h-[32px] rounded-xl hover:bg-lb-muted text-lb-accent transition-colors"
+            className="text-sm w-10 h-10 min-h-[44px] rounded-xl hover:bg-lb-muted text-lb-accent transition-colors flex items-center justify-center active:scale-[0.98]"
             aria-label={entry.favorite ? 'Favoriden çıkar' : 'Favoriye ekle'}
             title={entry.favorite ? 'Favoriden çıkar' : 'Favoriye ekle'}
           >
             {entry.favorite ? '⭐' : '☆'}
           </button>
           {isOwner && (
-            <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => onEdit(entry)}
-              className="text-xs text-lb-accent hover:text-lb-text px-2 min-h-[32px] rounded-xl hover:bg-lb-muted transition-colors"
-            >
-              Düzenle
-            </button>
-            {confirmDelete ? (
-              <span className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onDelete(entry.id)}
-                  className="text-xs text-lb-danger hover:text-red-300 px-2 min-h-[32px] rounded-xl"
-                >
-                  Sil
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(false)}
-                  className="text-xs text-lb-subtext px-2 min-h-[32px]"
-                >
-                  İptal
-                </button>
-              </span>
-            ) : (
+            <div className="flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="text-xs text-lb-subtext hover:text-lb-danger px-2 min-h-[32px] rounded-xl hover:bg-lb-danger/10 transition-colors"
+                onClick={() => onEdit(entry)}
+                className="text-xs text-lb-accent hover:text-lb-text px-2 min-h-[44px] rounded-xl hover:bg-lb-muted transition-colors font-hero-sub active:scale-[0.98]"
               >
-                ×
+                Düzenle
               </button>
-            )}
+              {confirmDelete ? (
+                <span className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onDelete(entry.id)}
+                    className="text-xs text-lb-danger px-2 min-h-[44px] rounded-xl hover:bg-lb-danger/10 active:scale-[0.98]"
+                  >
+                    Sil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="text-xs text-lb-subtext px-2 min-h-[44px] rounded-xl active:scale-[0.98]"
+                  >
+                    İptal
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-xs text-lb-subtext hover:text-lb-danger w-10 h-10 min-h-[44px] rounded-xl hover:bg-lb-danger/10 transition-colors flex items-center justify-center active:scale-[0.98]"
+                  aria-label="Sil"
+                >
+                  ×
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {entry.text && (
-        <p className="text-sm text-lb-text/95 leading-relaxed whitespace-pre-wrap">
+        <p className="text-sm text-lb-text/90 leading-relaxed whitespace-pre-wrap font-hero-sub">
           {entry.text}
         </p>
       )}
@@ -91,7 +92,7 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
               type="button"
               key={i}
               onClick={() => setLightbox(i)}
-              className="aspect-square rounded-xl overflow-hidden border border-lb-border hover:opacity-90 transition-opacity active:scale-[0.98]"
+              className="aspect-square rounded-xl overflow-hidden border border-lb-border hover:opacity-90 transition-opacity active:scale-[0.97]"
             >
               <img
                 src={img}
@@ -121,17 +122,15 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
       )}
 
       {tagMeta && (
-        <p className={`text-xs border rounded-full px-2.5 py-1 inline-flex ${tagMeta.color}`}>
+        <p
+          className={`text-xs border rounded-full px-2.5 py-1 inline-flex items-center gap-1.5 font-hero-sub ${tagMeta.color}`}
+        >
           {tagMeta.emoji} {tagMeta.label}
         </p>
       )}
 
       {lightbox !== null && (
-        <ImageLightbox
-          images={imageUrls}
-          startIndex={lightbox}
-          onClose={() => setLightbox(null)}
-        />
+        <ImageLightbox images={imageUrls} startIndex={lightbox} onClose={() => setLightbox(null)} />
       )}
     </div>
   );

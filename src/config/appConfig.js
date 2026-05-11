@@ -1,6 +1,9 @@
 export const INITIAL_YEAR = 2026;
 export const MIN_YEAR = 2025;
 
+/** İlişki başlangıcı (ISO yyyy-MM-dd) — “gün birlikte” sayacı için; kendi tarihinize göre güncelleyin. */
+export const RELATIONSHIP_START_DATE = '2020-01-01';
+
 export const ALLOWED_USERS = [
   "ahmetkarasakal184@gmail.com",
   "tugba.caglar.2001@gmail.com",

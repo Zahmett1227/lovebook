@@ -16,19 +16,22 @@ export default function ImageLightbox({ images, startIndex, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black/85 lightbox-overlay flex items-center justify-center p-4"
+      className="fixed inset-0 z-[110] bg-black/90 lightbox-overlay flex items-center justify-center p-4"
       onClick={onClose}
+      role="presentation"
     >
       <button
-        className="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none"
+        type="button"
+        className="absolute top-4 right-4 text-white/60 hover:text-white text-3xl w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition active:scale-[0.98]"
         onClick={onClose}
+        aria-label="Kapat"
       >
         ×
       </button>
       <img
         src={images[safeIndex]}
         alt=""
-        className="max-w-full max-h-[90vh] rounded-lg shadow-2xl object-contain"
+        className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
         onClick={(e) => e.stopPropagation()}
       />
     </div>

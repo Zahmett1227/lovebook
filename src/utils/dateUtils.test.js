@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeDateKey, formatDateDisplay, formatDateKey, isToday } from './dateUtils';
+import { normalizeDateKey, formatDateDisplay, formatDateKey, isToday, daysTogetherCount } from './dateUtils';
 
 describe('normalizeDateKey', () => {
   it('accepts valid ISO-like date', () => {
@@ -38,5 +38,16 @@ describe('isToday', () => {
     const key = formatDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
     expect(isToday(key)).toBe(true);
     expect(isToday('1900-01-01')).toBe(false);
+  });
+});
+
+describe('daysTogetherCount', () => {
+  it('returns a positive count for a past start date', () => {
+    expect(daysTogetherCount('2000-01-01')).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns 0 for invalid input', () => {
+    expect(daysTogetherCount('')).toBe(0);
+    expect(daysTogetherCount('nope')).toBe(0);
   });
 });

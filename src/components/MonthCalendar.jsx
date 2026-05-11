@@ -24,14 +24,16 @@ function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDa
   }, [entriesByDate]);
 
   return (
-    <div className={`bg-gradient-to-br ${paletteClass} rounded-[1.2rem] border border-lb-border p-3.5 flex flex-col gap-2 shadow-editorial ring-1 ring-white/[0.03]`}>
-      <h3 className="font-display text-center text-[1.05rem] font-semibold text-lb-text mb-1 tracking-[0.04em]">
+    <div
+      className={`bg-gradient-to-br ${paletteClass} rounded-[1.2rem] border border-lb-border p-3.5 flex flex-col gap-2 shadow-editorial ring-1 ring-white/[0.03] transition-shadow duration-300 hover:shadow-[0_8px_32px_rgba(227,176,92,0.08)]`}
+    >
+      <h3 className="font-display text-center text-base font-semibold text-lb-text mb-1 tracking-[0.05em]">
         {MONTH_NAMES[month - 1]}
       </h3>
 
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAY_NAMES.map((w) => (
-          <div key={w} className="text-center text-[10px] text-lb-subtext font-semibold uppercase tracking-[0.12em]">
+          <div key={w} className="text-center text-[9px] text-lb-subtext font-semibold uppercase tracking-[0.14em]">
             {w}
           </div>
         ))}
@@ -53,7 +55,7 @@ function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDa
           ) : (
             <div
               key={`empty-${i}`}
-              className="h-11 min-h-[44px] rounded-[0.95rem] border border-dashed border-lb-border/60 bg-lb-canvas/40"
+              className="h-11 min-h-[44px] rounded-[0.95rem] border border-dashed border-lb-border/40 bg-lb-canvas/30"
             />
           )
         )}

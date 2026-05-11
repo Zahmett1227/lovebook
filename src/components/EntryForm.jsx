@@ -141,16 +141,16 @@ export default function EntryForm({
         className="lb-input resize-y min-h-[120px]"
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
         {MEMORY_TAGS.map((tag) => (
           <button
             key={tag.id}
             type="button"
             onClick={() => setSelectedTag(selectedTag === tag.id ? '' : tag.id)}
-            className={`text-sm min-h-[44px] rounded-full px-3 border active:scale-[0.98] transition ${
+            className={`font-hero-sub text-sm min-h-[44px] rounded-full px-3 border active:scale-[0.98] transition ${
               selectedTag === tag.id
-                ? `${tag.color} shadow-glow`
-                : 'bg-lb-canvas text-lb-subtext border-lb-border hover:border-lb-accent/40 hover:text-lb-text'
+                ? `${tag.color} shadow-[0_0_16px_rgba(227,176,92,0.2)]`
+                : 'bg-lb-canvas border-lb-border text-lb-subtext hover:border-lb-accent/40'
             }`}
           >
             {tag.emoji} {tag.label}
@@ -159,7 +159,7 @@ export default function EntryForm({
       </div>
 
       {images.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {images.map((img, i) => (
             <div key={i} className="relative aspect-square">
               <img
@@ -170,7 +170,7 @@ export default function EntryForm({
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 w-7 h-7 bg-black/70 text-lb-text rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
+                className="absolute top-1 right-1 w-6 h-6 bg-black/70 text-lb-text rounded-full text-xs flex items-center justify-center leading-none active:scale-[0.98]"
               >
                 ×
               </button>
@@ -192,7 +192,7 @@ export default function EntryForm({
               <button
                 type="button"
                 onClick={() => removeVideo(i)}
-                className="absolute top-1 right-1 w-7 h-7 bg-black/70 text-lb-text rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
+                className="absolute top-1 right-1 w-6 h-6 bg-black/70 text-lb-text rounded-full text-xs flex items-center justify-center leading-none active:scale-[0.98]"
               >
                 ×
               </button>
@@ -219,37 +219,31 @@ export default function EntryForm({
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          <ImageUploader
-            onFilesSelected={handleImageFiles}
-            uploading={uploading}
-            onError={setUploadError}
-          />
-          <VideoUploader
-            onFilesSelected={handleVideoFiles}
-            uploading={uploading}
-            onError={setUploadError}
-          />
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex flex-wrap gap-2">
+        <ImageUploader
+          onFilesSelected={handleImageFiles}
+          uploading={uploading}
+          onError={setUploadError}
+        />
+        <VideoUploader
+          onFilesSelected={handleVideoFiles}
+          uploading={uploading}
+          onError={setUploadError}
+        />
+      </div>
+      <div className="flex gap-2 justify-end">
+        <button type="button" onClick={onCancel} className="lb-btn-ghost text-sm px-4 active:scale-[0.98]">
+          İptal
+        </button>
+        {!hideSubmitButton && (
           <button
-            type="button"
-            onClick={onCancel}
-            className="lb-btn-ghost text-sm px-4 flex-1 sm:flex-none"
+            type="submit"
+            disabled={saving || uploading || externalSaving}
+            className="lb-btn-primary text-sm px-6 disabled:opacity-50 active:scale-[0.98]"
           >
-            İptal
+            {saving || externalSaving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
           </button>
-          {!hideSubmitButton && (
-            <button
-              type="submit"
-              disabled={saving || uploading || externalSaving}
-              className="lb-btn-primary text-sm px-6 flex-1 sm:flex-none disabled:opacity-50"
-            >
-              {saving || externalSaving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </form>
   );

@@ -39,7 +39,7 @@ export default function YearPage({
         </div>
       )}
       <div className="px-4 sm:px-6 pt-4 pb-2">
-        <div className="rounded-[1.8rem] border border-lb-border bg-gradient-to-b from-lb-elevated via-lb-surface to-lb-canvas px-4 py-6 sm:py-8 shadow-editorial relative overflow-hidden ring-1 ring-lb-accent/10">
+        <div className="rounded-[1.85rem] border border-lb-border bg-gradient-to-b from-lb-elevated via-lb-surface to-lb-canvas px-6 py-8 sm:py-10 shadow-editorial relative overflow-hidden grain-overlay ring-1 ring-lb-accent/10">
           <div className="absolute -top-16 -right-10 w-40 h-40 rounded-full bg-lb-accent/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-12 w-44 h-44 rounded-full bg-lb-accent2/10 blur-3xl pointer-events-none" />
           <p className="font-hero-sub text-[10px] uppercase tracking-[0.32em] text-lb-accent relative text-center">
@@ -72,7 +72,7 @@ export default function YearPage({
         </div>
       </div>
 
-      <div className="lg:hidden px-4 pb-6 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="lg:hidden px-4 sm:px-6 pt-3 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 stagger">
         {[...LEFT_MONTHS, ...RIGHT_MONTHS].map((month) => (
           <MonthCalendar key={month} month={month} {...calendarProps} />
         ))}
@@ -80,7 +80,7 @@ export default function YearPage({
 
       <div className="hidden lg:flex pb-6 pt-4">
         <div
-          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-l-[1.5rem] border border-lb-border bg-lb-canvas/80"
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-l-[1.5rem] border border-lb-border bg-lb-canvas/80 stagger"
         >
           <PageLines />
           {LEFT_MONTHS.map((month) => (
@@ -94,7 +94,7 @@ export default function YearPage({
         <div className="relative w-10 flex-shrink-0 book-spine border-y border-lb-border" />
 
         <div
-          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-r-[1.5rem] border border-lb-border bg-lb-canvas/80"
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-r-[1.5rem] border border-lb-border bg-lb-canvas/80 stagger"
         >
           <PageLines />
           {RIGHT_MONTHS.map((month) => (
@@ -114,10 +114,10 @@ function FilterChip({ active, onClick, label }) {
     <button
       type="button"
       onClick={onClick}
-      className={`font-hero-sub text-xs whitespace-nowrap rounded-full border px-3.5 min-h-[38px] transition active:scale-[0.98] ${
+      className={`font-hero-sub text-xs whitespace-nowrap rounded-full border px-4 min-h-[38px] transition active:scale-[0.98] ${
         active
-          ? 'bg-lb-accent border-lb-accent text-lb-page shadow-glow'
-          : 'bg-lb-elevated border-lb-border text-lb-subtext hover:text-lb-text hover:border-lb-accent/35'
+          ? 'bg-lb-accent border-lb-accent text-lb-page shadow-[0_0_20px_rgba(227,176,92,0.3)]'
+          : 'bg-lb-elevated border-lb-border text-lb-subtext hover:border-lb-accent/35'
       }`}
     >
       {label}
