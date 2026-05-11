@@ -4,7 +4,7 @@ import { getMemoryTagById, normalizeMemoryTagId } from './config/memoryTags';
 import { normalizeDateKey, todayKey } from './utils/dateUtils';
 import { normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
 import { bytesToMb } from './utils/costUtils';
-import { getErrorMessage } from './utils/errorUtils';
+import { getErrorMessage, firestoreUserMessage } from './utils/errorUtils';
 import { useSelectedDate } from './hooks/useSelectedDate';
 import { useYearEntries, useDayEntries } from './hooks/useEntries';
 import { getEntriesPage, getLatestEntries } from './services/entryService';
@@ -16,6 +16,7 @@ import DayDetailPanel from './components/DayDetailPanel';
 import EmptyState from './components/EmptyState';
 import LaunchMenu from './components/LaunchMenu';
 import MoodReviewPanel from './components/MoodReviewPanel';
+import OfflineBanner from './components/OfflineBanner';
 
 const ANIM_CLASS = {
   'exit-forward':  'page-exit-forward',
@@ -38,6 +39,9 @@ function AppContent() {
   const [reviewHasMore, setReviewHasMore] = useState(true);
   const [randomStatus, setRandomStatus] = useState('');
   const [randomLoading, setRandomLoading] = useState(false);
+  const [recentListError, setRecentListError] = useState(null);
+  const [reviewListError, setReviewListError] = useState(null);
+  const [showSessionCost, setShowSessionCost] = useState(false);
   const [sessionCostPreview, setSessionCostPreview] = useState({
     totalBytes: 0,
     storageUsd: 0,
@@ -48,8 +52,10 @@ function AppContent() {
   const pendingYear = useRef(null);
 
   const { selectedDate, selectDate, clearDate } = useSelectedDate();
-  const { entries: yearEntries, datesWithContent, refresh: refreshYear } = useYearEntries(year);
-  const { entries: dayEntries, loading: dayLoading, refresh: refreshDay } = useDayEntries(selectedDate);
+  const { entries: yearEntries, datesWithContent, refresh: refreshYear, loadError: yearLoadError } =
+    useYearEntries(year);
+  const { entries: dayEntries, loading: dayLoading, loadError: dayLoadError, refresh: refreshDay } =
+    useDayEntries(selectedDate);
 
   const entriesByDate = useMemo(
     () =>
@@ -128,11 +134,13 @@ function AppContent() {
 
   const refreshRecentEntries = useCallback(async () => {
     setRecentEntriesLoading(true);
+    setRecentListError(null);
     try {
       const docs = await getLatestEntries(120);
       setRecentEntries(docs);
     } catch (err) {
       console.error('[FIRESTORE_READ_ERROR] getLatestEntries:', getErrorMessage(err));
+      setRecentListError(firestoreUserMessage(err));
     } finally {
       setRecentEntriesLoading(false);
     }
@@ -142,32 +150,51 @@ function AppContent() {
     refreshRecentEntries();
   }, [refreshRecentEntries]);
 
-  const loadReviewEntries = useCallback(async ({ reset = false } = {}) => {
-    if (reset) {
-      setReviewLoading(true);
-    } else {
-      setReviewLoadingMore(true);
-    }
+  const resetReviewEntries = useCallback(async () => {
+    setReviewListError(null);
+    setReviewLoading(true);
     try {
       const { docs, cursor, hasMore } = await getEntriesPage({
-        cursor: reset ? null : reviewCursor,
+        cursor: null,
         pageSize: 30,
       });
-      setReviewEntries((prev) => (reset ? docs : [...prev, ...docs]));
+      setReviewEntries(docs);
       setReviewCursor(cursor);
       setReviewHasMore(hasMore);
     } catch (err) {
       console.error('[FIRESTORE_READ_ERROR] getEntriesPage:', getErrorMessage(err));
+      setReviewListError(firestoreUserMessage(err));
     } finally {
       setReviewLoading(false);
+    }
+  }, []);
+
+  const loadMoreReviewEntries = useCallback(async () => {
+    if (!reviewCursor) return;
+    setReviewLoadingMore(true);
+    try {
+      const { docs, cursor, hasMore } = await getEntriesPage({
+        cursor: reviewCursor,
+        pageSize: 30,
+      });
+      setReviewEntries((prev) => [...prev, ...docs]);
+      setReviewCursor(cursor);
+      setReviewHasMore(hasMore);
+    } catch (err) {
+      console.error('[FIRESTORE_READ_ERROR] getEntriesPage:', getErrorMessage(err));
+      setReviewListError(firestoreUserMessage(err));
+    } finally {
       setReviewLoadingMore(false);
     }
   }, [reviewCursor]);
 
   useEffect(() => {
     if (viewMode !== 'review-mood') return;
-    loadReviewEntries({ reset: true });
-  }, [viewMode, loadReviewEntries]);
+    const id = window.setTimeout(() => {
+      void resetReviewEntries();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [viewMode, resetReviewEntries]);
 
   useEffect(() => {
     function readSessionCost() {
@@ -256,12 +283,13 @@ function AppContent() {
 
   return (
     <BookLayout>
-      {/* Book title */}
-      <div className="border-b border-[#cbe3d5] bg-[#eef9f2] py-3 px-4 text-center">
-        <h1 className="font-display text-2xl font-semibold text-[#174330] tracking-wide">
+      <OfflineBanner />
+      {/* Book title — LaunchMenu ile uyumlu sıcak editorial ton */}
+      <div className="border-b border-[#ead4ce] bg-gradient-to-r from-[#fff9f8] via-[#fbeee8] to-[#f8e7df] py-3 px-4 text-center">
+        <h1 className="font-hero-title text-2xl sm:text-3xl font-semibold text-[#5a3738] tracking-tight">
           LoveBook
         </h1>
-        <p className="text-[10px] text-[#5d8f77] mt-0.5 uppercase tracking-widest">
+        <p className="font-hero-sub text-[10px] text-[#a0726c] mt-1 uppercase tracking-[0.2em]">
           Bizim Günlüğümüz
         </p>
       </div>
@@ -278,14 +306,14 @@ function AppContent() {
           <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => setViewMode('launch')}
-              className="text-xs sm:text-sm border border-[#cbe3d5] bg-white hover:bg-[#edf8f2] text-[#1f6b4b] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98]"
+              className="text-xs sm:text-sm border border-[#ead4ce] bg-white/90 hover:bg-[#fff6f3] text-[#6f4548] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98]"
             >
               Menüye Dön
             </button>
             <button
               onClick={openRandomMemory}
               disabled={randomLoading}
-              className="text-xs sm:text-sm border border-[#cbe3d5] bg-white hover:bg-[#edf8f2] text-[#1f6b4b] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98] disabled:opacity-60"
+              className="text-xs sm:text-sm border border-[#ead4ce] bg-white/90 hover:bg-[#fff6f3] text-[#6f4548] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98] disabled:opacity-60"
             >
               {randomLoading ? 'Açılıyor…' : '🎲 Rastgele Anı'}
             </button>
@@ -310,28 +338,55 @@ function AppContent() {
       {(viewMode === 'calendar' || viewMode === 'review-date') && (
         <>
           <div className="px-4 sm:px-6 pt-2 pb-2">
-            <div className="rounded-2xl border border-[#cbe3d5] bg-white/80 p-3">
-              <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Blaze Yükleme Tahmini</h3>
-              <div className="rounded-xl border border-[#d7ebde] bg-[#f7fcf9] p-2 mb-3">
-                <div className="flex items-center justify-between text-[11px] text-[#2e664c]">
-                  <span>Son yükleme oturumu</span>
-                  <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
+            <div className="rounded-2xl border border-[#ead4ce] bg-white/80 p-3 shadow-editorial">
+              <button
+                type="button"
+                onClick={() => setShowSessionCost((v) => !v)}
+                className="w-full text-left text-xs font-semibold text-[#633f41] flex items-center justify-between gap-2 py-1 min-h-[40px]"
+                aria-expanded={showSessionCost}
+              >
+                <span>Son oturum yüklemesi / tahmini maliyet</span>
+                <span className="text-[#a0726c] shrink-0" aria-hidden>
+                  {showSessionCost ? '▼' : '▶'}
+                </span>
+              </button>
+              {showSessionCost && (
+                <div className="rounded-xl border border-[#e7d3cb] bg-[#fffaf8] p-2 mb-3 mt-1">
+                  <div className="flex items-center justify-between text-[11px] text-[#7a4f4f]">
+                    <span>Son yükleme oturumu</span>
+                    <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#f0ded8] overflow-hidden mt-1.5">
+                    <div
+                      className="h-full bg-[#8f5f5f]"
+                      style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-[#8f6661] mt-1">
+                    Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
+                  </p>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#dbeee2] overflow-hidden mt-1.5">
-                  <div
-                    className="h-full bg-[#2d7b58]"
-                    style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
-                  />
+              )}
+              <h3 className="text-sm font-semibold text-[#633f41] mb-2 mt-1">Son Anılar</h3>
+              {recentListError && (
+                <div
+                  role="alert"
+                  className="mb-2 rounded-xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2 text-xs text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                >
+                  <span>{recentListError}</span>
+                  <button
+                    type="button"
+                    onClick={() => refreshRecentEntries()}
+                    className="shrink-0 rounded-lg border border-[#ddbcb3] bg-white px-2.5 py-1 text-[11px] font-medium text-[#6f4548]"
+                  >
+                    Tekrar dene
+                  </button>
                 </div>
-                <p className="text-[10px] text-[#4b7f66] mt-1">
-                  Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
-                </p>
-              </div>
-              <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Son Anılar</h3>
+              )}
               {recentEntriesLoading ? (
-                <p className="text-xs text-[#6b9c86]">Yükleniyor…</p>
+                <p className="text-xs text-[#8f6661]">Yükleniyor…</p>
               ) : latestEntries.length === 0 ? (
-                <p className="text-xs text-[#6b9c86]">Henüz anı eklenmedi.</p>
+                <p className="text-xs text-[#8f6661]">Henüz anı eklenmedi.</p>
               ) : (
                 <div className="space-y-2">
                   {latestEntries.map((entry) => {
@@ -343,7 +398,7 @@ function AppContent() {
                       <button
                         key={entry.id}
                         onClick={() => openDateDetail(entry.date)}
-                        className="w-full text-left rounded-xl border border-[#d7ebde] bg-[#fbfffc] hover:bg-[#eef9f2] px-3 py-2 transition active:scale-[0.99]"
+                        className="w-full text-left rounded-xl border border-[#ead8d1] bg-[#fffaf8] hover:bg-[#fff3ef] px-3 py-2 transition active:scale-[0.99]"
                       >
                         <div className="flex items-center gap-2">
                           {previewImage ? (
@@ -353,15 +408,15 @@ function AppContent() {
                               className="w-10 h-10 rounded-lg object-cover shrink-0"
                             />
                           ) : previewVideo ? (
-                            <div className="w-10 h-10 rounded-lg shrink-0 bg-[#dcefe4] text-[#1f6b4b] flex items-center justify-center text-[10px]">
+                            <div className="w-10 h-10 rounded-lg shrink-0 bg-[#f0ded8] text-[#7a4f4f] flex items-center justify-center text-[10px]">
                               VIDEO
                             </div>
                           ) : null}
                           <div className="min-w-0 flex-1">
-                            <p className="text-[11px] text-[#6b9c86]">
+                            <p className="text-[11px] text-[#9a726c]">
                               {entry.date} • {entry.userDisplayName}
                             </p>
-                            <p className="text-xs text-[#22533c] truncate">
+                            <p className="text-xs text-[#5e3f3f] truncate">
                               {entry.text || entry.title || 'Metin yok'}
                             </p>
                           </div>
@@ -390,6 +445,8 @@ function AppContent() {
               entriesByDate={activeTagFilter === 'all' ? entriesByDate : filteredEntriesByDate}
               activeTagFilter={activeTagFilter}
               onTagFilterChange={setActiveTagFilter}
+              calendarLoadError={yearLoadError}
+              onRetryCalendar={refreshYear}
             />
           </div>
         </>
@@ -401,9 +458,11 @@ function AppContent() {
           loading={reviewLoading}
           loadingMore={reviewLoadingMore}
           hasMore={reviewHasMore}
-          onLoadMore={() => loadReviewEntries({ reset: false })}
+          onLoadMore={loadMoreReviewEntries}
           activeTagFilter={activeTagFilter}
           onTagFilterChange={setActiveTagFilter}
+          listError={reviewListError}
+          onRetryList={resetReviewEntries}
           onOpenDate={(dateKey) => {
             setViewMode('calendar');
             openDateDetail(dateKey);
@@ -416,6 +475,7 @@ function AppContent() {
           dateKey={selectedDate}
           entries={dayEntries}
           loading={dayLoading}
+          loadError={dayLoadError}
           onClose={clearDate}
           onRefresh={handleRefresh}
           activeTagFilter={activeTagFilter}

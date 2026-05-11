@@ -10,6 +10,8 @@ export default function MoodReviewPanel({
   activeTagFilter,
   onTagFilterChange,
   onOpenDate,
+  listError = null,
+  onRetryList,
 }) {
   const filtered = useMemo(() => {
     const safeEntries = Array.isArray(entries) ? entries : [];
@@ -27,6 +29,24 @@ export default function MoodReviewPanel({
       <div className="rounded-3xl border border-[#ead8d1] bg-[#fff9f7]/90 p-4 sm:p-5 shadow-editorial">
         <h3 className="font-display text-2xl text-[#633f41] mb-1">Mooda göre anılar</h3>
         <p className="text-xs text-[#8f6661] mb-3">Emoji etiketine göre filtreleyip anıları inceleyebilirsin.</p>
+
+        {listError && !loading && (
+          <div
+            role="alert"
+            className="mb-3 rounded-xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2 text-xs text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          >
+            <span>{listError}</span>
+            {onRetryList && (
+              <button
+                type="button"
+                onClick={onRetryList}
+                className="shrink-0 rounded-lg border border-[#ddbcb3] bg-white px-2.5 py-1 text-[11px] font-medium text-[#6f4548]"
+              >
+                Tekrar dene
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           <TagChip

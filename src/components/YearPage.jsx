@@ -12,11 +12,32 @@ export default function YearPage({
   entriesByDate,
   activeTagFilter = 'all',
   onTagFilterChange,
+  calendarLoadError = null,
+  onRetryCalendar,
 }) {
   const calendarProps = { year, datesWithContent, selectedDate, onSelectDate, entriesByDate };
 
   return (
     <>
+      {calendarLoadError && (
+        <div className="px-4 sm:px-6 pt-3">
+          <div
+            role="alert"
+            className="rounded-2xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2.5 text-xs sm:text-sm text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          >
+            <span>{calendarLoadError}</span>
+            {onRetryCalendar && (
+              <button
+                type="button"
+                onClick={onRetryCalendar}
+                className="shrink-0 rounded-xl border border-[#ddbcb3] bg-white px-3 py-1.5 text-xs font-medium text-[#6f4548] active:scale-[0.98]"
+              >
+                Tekrar dene
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="px-4 sm:px-6 pt-4 pb-2">
         <div className="rounded-[1.8rem] border border-[#ead4ce] bg-gradient-to-br from-[#fff9f8] via-[#fbeee8] to-[#f8e7df] px-4 py-5 shadow-editorial relative overflow-hidden">
           <div className="absolute -top-10 -right-6 w-24 h-24 rounded-full bg-[#efc1c7]/35 blur-2xl" />

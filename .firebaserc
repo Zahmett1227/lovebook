@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "npx firebase-tools deploy --only hosting": "lovebook-be3c2"
+  },
+  "targets": {},
+  "etags": {}
+}

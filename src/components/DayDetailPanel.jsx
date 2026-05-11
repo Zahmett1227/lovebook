@@ -14,6 +14,7 @@ export default function DayDetailPanel({
   dateKey,
   entries,
   loading,
+  loadError = null,
   onClose,
   onRefresh,
   openComposerSignal = 0,
@@ -46,9 +47,12 @@ export default function DayDetailPanel({
 
   useEffect(() => {
     if (!openComposerSignal) return;
-    setEditingEntry(null);
-    setSaveError('');
-    setShowForm(true);
+    const id = window.setTimeout(() => {
+      setEditingEntry(null);
+      setSaveError('');
+      setShowForm(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [openComposerSignal]);
 
   useEffect(() => {
@@ -173,6 +177,21 @@ export default function DayDetailPanel({
             <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2">
               {successMessage}
             </p>
+          </div>
+        )}
+
+        {loadError && !loading && (
+          <div className="px-4 pt-3 shrink-0" role="alert">
+            <div className="rounded-2xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2.5 text-xs text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <span>{loadError}</span>
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="shrink-0 rounded-xl border border-[#ddbcb3] bg-white px-3 py-1.5 text-xs font-medium text-[#6f4548] active:scale-[0.98]"
+              >
+                Tekrar dene
+              </button>
+            </div>
           </div>
         )}
 
