@@ -25,6 +25,7 @@ export default function DayDetailPanel({
   const [successMessage, setSuccessMessage] = useState('');
 
   const safeDateKey = normalizeDateKey(dateKey);
+  const formId = `entry-form-${(safeDateKey || dateKey || 'memory').replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const [year, month, day] = (safeDateKey || '1970-01-01').split('-').map(Number);
   const leftEmail  = ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'left');
   const rightEmail = ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'right');
@@ -138,6 +139,15 @@ export default function DayDetailPanel({
                 + Anı Ekle
               </button>
             )}
+            {showForm && (
+              <button
+                type="submit"
+                form={formId}
+                className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white rounded-full px-4 min-h-[44px] active:scale-[0.98] transition"
+              >
+                {editingEntry ? 'Güncelle' : 'Kaydet'}
+              </button>
+            )}
             <button onClick={onClose} className="text-[#6e9f87] hover:text-[#1f6b4b] text-2xl leading-none w-11 h-11 rounded-full active:scale-[0.98] transition">
               ×
             </button>
@@ -166,6 +176,8 @@ export default function DayDetailPanel({
               onSave={handleSave}
               onCancel={cancelForm}
               initial={editingEntry}
+              formId={formId}
+              hideSubmitButton
             />
           </div>
         )}

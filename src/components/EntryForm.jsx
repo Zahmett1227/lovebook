@@ -6,7 +6,15 @@ import { uploadImages, uploadVideos } from '../services/storageService';
 import { normalizeImageUrls, normalizeVideoItems } from '../utils/imageUtils';
 import { bytesToMb, estimateSessionCost } from '../utils/costUtils';
 
-export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }) {
+export default function EntryForm({
+  dateKey,
+  userId,
+  onSave,
+  onCancel,
+  initial,
+  formId,
+  hideSubmitButton = false,
+}) {
   const [title, setTitle]   = useState(initial?.title ?? '');
   const [text, setText]     = useState(initial?.text ?? '');
   const [selectedTag, setSelectedTag] = useState(
@@ -101,7 +109,7 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form id={formId} onSubmit={handleSubmit} className="space-y-3">
       {uploadError && (
         <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
           {uploadError}
@@ -223,13 +231,15 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
           >
             İptal
           </button>
-          <button
-            type="submit"
-            disabled={saving || uploading}
-            className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white px-5 min-h-[44px] rounded-2xl transition disabled:opacity-60 active:scale-[0.98] flex-1 sm:flex-none"
-          >
-            {saving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
-          </button>
+          {!hideSubmitButton && (
+            <button
+              type="submit"
+              disabled={saving || uploading}
+              className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white px-5 min-h-[44px] rounded-2xl transition disabled:opacity-60 active:scale-[0.98] flex-1 sm:flex-none"
+            >
+              {saving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
+            </button>
+          )}
         </div>
       </div>
     </form>
