@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { INITIAL_YEAR, MIN_YEAR } from './config/appConfig';
 import { getMemoryTagById, normalizeMemoryTagId } from './config/memoryTags';
-import { normalizeDateKey } from './utils/dateUtils';
+import { normalizeDateKey, todayKey } from './utils/dateUtils';
 import { normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
 import { bytesToMb } from './utils/costUtils';
 import { useSelectedDate } from './hooks/useSelectedDate';
@@ -13,6 +13,8 @@ import YearNavigation from './components/YearNavigation';
 import YearPage from './components/YearPage';
 import DayDetailPanel from './components/DayDetailPanel';
 import EmptyState from './components/EmptyState';
+import LaunchMenu from './components/LaunchMenu';
+import MoodReviewPanel from './components/MoodReviewPanel';
 
 const ANIM_CLASS = {
   'exit-forward':  'page-exit-forward',
@@ -22,6 +24,7 @@ const ANIM_CLASS = {
 };
 
 function AppContent() {
+  const [viewMode, setViewMode] = useState('launch'); // launch | calendar | review-date | review-mood
   const [year, setYear]       = useState(INITIAL_YEAR);
   const [pageAnim, setPageAnim] = useState(null); // null | 'exit-forward' | 'exit-back' | 'enter-forward' | 'enter-back'
   const [activeTagFilter, setActiveTagFilter] = useState('all');
@@ -184,6 +187,36 @@ function AppContent() {
     }
   }
 
+  function openDateDetail(dateKey) {
+    const safeDate = normalizeDateKey(dateKey);
+    if (!safeDate) return;
+    const entryYear = Number(safeDate.split('-')?.[0]);
+    if (Number.isFinite(entryYear) && entryYear !== year) setYear(entryYear);
+    if (selectedDate === safeDate) {
+      clearDate();
+      window.setTimeout(() => selectDate(safeDate), 0);
+      return;
+    }
+    selectDate(safeDate);
+  }
+
+  function goToTodayComposer() {
+    setViewMode('calendar');
+    openDateDetail(todayKey());
+  }
+
+  function goToCalendarMode() {
+    setViewMode('calendar');
+  }
+
+  function goToReviewDateMode() {
+    setViewMode('review-date');
+  }
+
+  function goToReviewMoodMode() {
+    setViewMode('review-mood');
+  }
+
   return (
     <BookLayout>
       {/* Book title */}
@@ -203,112 +236,140 @@ function AppContent() {
         disabled={isAnimating}
       />
 
-      <div className="px-4 sm:px-6 pt-2 pb-1">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={openRandomMemory}
-            disabled={randomLoading}
-            className="text-xs sm:text-sm border border-[#cbe3d5] bg-white hover:bg-[#edf8f2] text-[#1f6b4b] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98] disabled:opacity-60"
-          >
-            {randomLoading ? 'Açılıyor…' : '🎲 Rastgele Anı'}
-          </button>
-        </div>
-        {randomStatus && (
-          <div className="mt-2">
-            <EmptyState message={randomStatus} />
+      {viewMode !== 'launch' && (
+        <div className="px-4 sm:px-6 pt-2 pb-1">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => setViewMode('launch')}
+              className="text-xs sm:text-sm border border-[#cbe3d5] bg-white hover:bg-[#edf8f2] text-[#1f6b4b] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98]"
+            >
+              Menüye Dön
+            </button>
+            <button
+              onClick={openRandomMemory}
+              disabled={randomLoading}
+              className="text-xs sm:text-sm border border-[#cbe3d5] bg-white hover:bg-[#edf8f2] text-[#1f6b4b] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98] disabled:opacity-60"
+            >
+              {randomLoading ? 'Açılıyor…' : '🎲 Rastgele Anı'}
+            </button>
           </div>
-        )}
-      </div>
-
-      <div className="px-4 sm:px-6 pt-2 pb-2">
-        <div className="rounded-2xl border border-[#cbe3d5] bg-white/80 p-3">
-          <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Blaze Yükleme Tahmini</h3>
-          <div className="rounded-xl border border-[#d7ebde] bg-[#f7fcf9] p-2 mb-3">
-            <div className="flex items-center justify-between text-[11px] text-[#2e664c]">
-              <span>Son yükleme oturumu</span>
-              <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-[#dbeee2] overflow-hidden mt-1.5">
-              <div
-                className="h-full bg-[#2d7b58]"
-                style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-[#4b7f66] mt-1">
-              Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
-            </p>
-          </div>
-          <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Son Anılar</h3>
-          {allEntriesLoading ? (
-            <p className="text-xs text-[#6b9c86]">Yükleniyor…</p>
-          ) : latestEntries.length === 0 ? (
-            <p className="text-xs text-[#6b9c86]">Henüz anı eklenmedi.</p>
-          ) : (
-            <div className="space-y-2">
-              {latestEntries.map((entry) => {
-                const normalizedTag = normalizeMemoryTagId(entry.tag || entry.mood || null);
-                const tagMeta = getMemoryTagById(normalizedTag);
-                const previewImage = resolveImageUrl(entry.imageUrls?.[0]);
-                const previewVideo = normalizeVideoItems(entry.videoUrls)[0];
-                return (
-                  <button
-                    key={entry.id}
-                    onClick={() => {
-                      const safeEntryDate = normalizeDateKey(entry.date);
-                      const entryYear = Number(safeEntryDate?.split('-')?.[0]);
-                      if (Number.isFinite(entryYear) && entryYear !== year) setYear(entryYear);
-                      if (safeEntryDate) selectDate(safeEntryDate);
-                    }}
-                    className="w-full text-left rounded-xl border border-[#d7ebde] bg-[#fbfffc] hover:bg-[#eef9f2] px-3 py-2 transition active:scale-[0.99]"
-                  >
-                    <div className="flex items-center gap-2">
-                      {previewImage ? (
-                        <img
-                          src={previewImage}
-                          alt=""
-                          className="w-10 h-10 rounded-lg object-cover shrink-0"
-                        />
-                      ) : previewVideo ? (
-                        <div className="w-10 h-10 rounded-lg shrink-0 bg-[#dcefe4] text-[#1f6b4b] flex items-center justify-center text-[10px]">
-                          VIDEO
-                        </div>
-                      ) : null}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] text-[#6b9c86]">
-                          {entry.date} • {entry.userDisplayName}
-                        </p>
-                        <p className="text-xs text-[#22533c] truncate">
-                          {entry.text || entry.title || 'Metin yok'}
-                        </p>
-                      </div>
-                      <span className="text-sm shrink-0">
-                        {tagMeta?.emoji ?? '•'}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+          {randomStatus && (
+            <div className="mt-2">
+              <EmptyState message={randomStatus} />
             </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Animated page wrapper */}
-      <div
-        className={ANIM_CLASS[pageAnim] ?? ''}
-        onAnimationEnd={handleAnimEnd}
-        style={{ willChange: 'transform, opacity' }}
-      >
-        <YearPage
-          year={year}
-          datesWithContent={activeTagFilter === 'all' ? datesWithContent : filteredDatesWithContent}
-          selectedDate={selectedDate}
-          onSelectDate={selectDate}
-          entriesByDate={activeTagFilter === 'all' ? entriesByDate : filteredEntriesByDate}
+      {viewMode === 'launch' && (
+        <LaunchMenu
+          onAddToday={goToTodayComposer}
+          onAddDifferentDate={goToCalendarMode}
+          onReviewByDate={goToReviewDateMode}
+          onReviewByMood={goToReviewMoodMode}
+        />
+      )}
+
+      {(viewMode === 'calendar' || viewMode === 'review-date') && (
+        <>
+          <div className="px-4 sm:px-6 pt-2 pb-2">
+            <div className="rounded-2xl border border-[#cbe3d5] bg-white/80 p-3">
+              <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Blaze Yükleme Tahmini</h3>
+              <div className="rounded-xl border border-[#d7ebde] bg-[#f7fcf9] p-2 mb-3">
+                <div className="flex items-center justify-between text-[11px] text-[#2e664c]">
+                  <span>Son yükleme oturumu</span>
+                  <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-[#dbeee2] overflow-hidden mt-1.5">
+                  <div
+                    className="h-full bg-[#2d7b58]"
+                    style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-[#4b7f66] mt-1">
+                  Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
+                </p>
+              </div>
+              <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Son Anılar</h3>
+              {allEntriesLoading ? (
+                <p className="text-xs text-[#6b9c86]">Yükleniyor…</p>
+              ) : latestEntries.length === 0 ? (
+                <p className="text-xs text-[#6b9c86]">Henüz anı eklenmedi.</p>
+              ) : (
+                <div className="space-y-2">
+                  {latestEntries.map((entry) => {
+                    const normalizedTag = normalizeMemoryTagId(entry.tag || entry.mood || null);
+                    const tagMeta = getMemoryTagById(normalizedTag);
+                    const previewImage = resolveImageUrl(entry.imageUrls?.[0]);
+                    const previewVideo = normalizeVideoItems(entry.videoUrls)[0];
+                    return (
+                      <button
+                        key={entry.id}
+                        onClick={() => openDateDetail(entry.date)}
+                        className="w-full text-left rounded-xl border border-[#d7ebde] bg-[#fbfffc] hover:bg-[#eef9f2] px-3 py-2 transition active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-2">
+                          {previewImage ? (
+                            <img
+                              src={previewImage}
+                              alt=""
+                              className="w-10 h-10 rounded-lg object-cover shrink-0"
+                            />
+                          ) : previewVideo ? (
+                            <div className="w-10 h-10 rounded-lg shrink-0 bg-[#dcefe4] text-[#1f6b4b] flex items-center justify-center text-[10px]">
+                              VIDEO
+                            </div>
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] text-[#6b9c86]">
+                              {entry.date} • {entry.userDisplayName}
+                            </p>
+                            <p className="text-xs text-[#22533c] truncate">
+                              {entry.text || entry.title || 'Metin yok'}
+                            </p>
+                          </div>
+                          <span className="text-sm shrink-0">
+                            {tagMeta?.emoji ?? '•'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Animated page wrapper */}
+          <div
+            className={ANIM_CLASS[pageAnim] ?? ''}
+            onAnimationEnd={handleAnimEnd}
+            style={{ willChange: 'transform, opacity' }}
+          >
+            <YearPage
+              year={year}
+              datesWithContent={activeTagFilter === 'all' ? datesWithContent : filteredDatesWithContent}
+              selectedDate={selectedDate}
+              onSelectDate={selectDate}
+              entriesByDate={activeTagFilter === 'all' ? entriesByDate : filteredEntriesByDate}
+              activeTagFilter={activeTagFilter}
+              onTagFilterChange={setActiveTagFilter}
+            />
+          </div>
+        </>
+      )}
+
+      {viewMode === 'review-mood' && (
+        <MoodReviewPanel
+          entries={allEntries}
+          loading={allEntriesLoading}
           activeTagFilter={activeTagFilter}
           onTagFilterChange={setActiveTagFilter}
+          onOpenDate={(dateKey) => {
+            setViewMode('calendar');
+            openDateDetail(dateKey);
+          }}
         />
-      </div>
+      )}
 
       {selectedDate && (
         <DayDetailPanel
