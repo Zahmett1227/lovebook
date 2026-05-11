@@ -2,12 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { INITIAL_YEAR, MIN_YEAR } from './config/appConfig';
 import { getMemoryTagById, normalizeMemoryTagId } from './config/memoryTags';
 import { normalizeDateKey, todayKey } from './utils/dateUtils';
-import { normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
+import { normalizeImageUrls, normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
 import { bytesToMb } from './utils/costUtils';
 import { getErrorMessage, firestoreUserMessage } from './utils/errorUtils';
+import { useAuth } from './hooks/useAuth';
 import { useSelectedDate } from './hooks/useSelectedDate';
 import { useYearEntries, useDayEntries } from './hooks/useEntries';
-import { getEntriesPage, getLatestEntries } from './services/entryService';
+import {
+  getEntriesPage,
+  getLatestEntries,
+  getAllEntries,
+  updateEntry,
+  deleteEntry,
+} from './services/entryService';
+import { getCommentCount } from './services/commentService';
 import ProtectedRoute from './components/ProtectedRoute';
 import BookLayout from './components/BookLayout';
 import YearNavigation from './components/YearNavigation';
@@ -17,6 +25,9 @@ import EmptyState from './components/EmptyState';
 import LaunchMenu from './components/LaunchMenu';
 import MoodReviewPanel from './components/MoodReviewPanel';
 import OfflineBanner from './components/OfflineBanner';
+import MemoryFeedScreen from './screens/MemoryFeedScreen';
+import CommentsScreen from './screens/CommentsScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 const ANIM_CLASS = {
   'exit-forward':  'page-exit-forward',
@@ -26,7 +37,8 @@ const ANIM_CLASS = {
 };
 
 function AppContent() {
-  const [viewMode, setViewMode] = useState('launch'); // launch | calendar | review-date | review-mood
+  const { user } = useAuth();
+  const [viewMode, setViewMode] = useState('launch'); // launch | calendar | review-date | review-mood | feed | profile
   const [year, setYear]       = useState(INITIAL_YEAR);
   const [pageAnim, setPageAnim] = useState(null); // null | 'exit-forward' | 'exit-back' | 'enter-forward' | 'enter-back'
   const [activeTagFilter, setActiveTagFilter] = useState('all');
@@ -50,6 +62,11 @@ function AppContent() {
     uploadOps: 0,
   });
   const pendingYear = useRef(null);
+
+  const [allEntries, setAllEntries] = useState([]);
+  const [allEntriesLoading, setAllEntriesLoading] = useState(true);
+  const [commentCounts, setCommentCounts] = useState({});
+  const [commentEntry, setCommentEntry] = useState(null);
 
   const { selectedDate, selectDate, clearDate } = useSelectedDate();
   const { entries: yearEntries, datesWithContent, refresh: refreshYear, loadError: yearLoadError } =
@@ -130,6 +147,71 @@ function AppContent() {
     refreshYear();
     refreshDay();
     refreshRecentEntries();
+    void reloadAllEntries();
+  }
+
+  const mobileTab = useMemo(() => {
+    if (viewMode === 'launch') return 'home';
+    if (viewMode === 'calendar' || viewMode === 'review-date') return 'calendar';
+    if (viewMode === 'feed') return 'memories';
+    if (viewMode === 'profile') return 'profile';
+    return null;
+  }, [viewMode]);
+
+  const feedEntries = useMemo(
+    () => allEntries.map((e) => ({ ...e, commentCount: commentCounts[e.id] ?? 0 })),
+    [allEntries, commentCounts]
+  );
+
+  const profileStats = useMemo(() => {
+    const totalEntries = allEntries.length;
+    const totalPhotos = allEntries.reduce((s, e) => s + normalizeImageUrls(e.imageUrls).length, 0);
+    const totalVideos = allEntries.reduce((s, e) => s + normalizeVideoItems(e.videoUrls).length, 0);
+    return { totalEntries, totalPhotos, totalVideos };
+  }, [allEntries]);
+
+  async function handleFeedFavorite(entry) {
+    try {
+      await updateEntry(entry.id, { favorite: !entry.favorite });
+      setAllEntries((prev) =>
+        prev.map((e) => (e.id === entry.id ? { ...e, favorite: !e.favorite } : e))
+      );
+      refreshYear();
+      void refreshRecentEntries();
+    } catch (err) {
+      console.error('[updateEntry favorite]', getErrorMessage(err));
+    }
+  }
+
+  async function handleFeedDelete(entryId) {
+    try {
+      await deleteEntry(entryId);
+      setAllEntries((prev) => prev.filter((e) => e.id !== entryId));
+      setCommentCounts((prev) => {
+        const next = { ...prev };
+        delete next[entryId];
+        return next;
+      });
+      refreshYear();
+      void refreshRecentEntries();
+      if (commentEntry?.id === entryId) setCommentEntry(null);
+    } catch (err) {
+      console.error('[deleteEntry]', getErrorMessage(err));
+    }
+  }
+
+  function handleFeedEdit(entry) {
+    setViewMode('calendar');
+    openDateDetail(entry.date);
+  }
+
+  async function handleCommentCountRefresh(entryId) {
+    try {
+      const n = await getCommentCount(entryId);
+      setCommentCounts((prev) => ({ ...prev, [entryId]: n }));
+    } catch {
+      // ignore
+    }
   }
 
   const refreshRecentEntries = useCallback(async () => {
@@ -146,9 +228,47 @@ function AppContent() {
     }
   }, []);
 
+  const reloadAllEntries = useCallback(async () => {
+    setAllEntriesLoading(true);
+    try {
+      const data = await getAllEntries();
+      setAllEntries(data);
+    } catch (err) {
+      console.error('[FIRESTORE_READ_ERROR] getAllEntries:', getErrorMessage(err));
+      setAllEntries([]);
+    } finally {
+      setAllEntriesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     refreshRecentEntries();
   }, [refreshRecentEntries]);
+
+  useEffect(() => {
+    void reloadAllEntries();
+  }, [reloadAllEntries]);
+
+  useEffect(() => {
+    if (viewMode !== 'feed' || allEntries.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const next = {};
+      await Promise.all(
+        allEntries.map(async (e) => {
+          try {
+            next[e.id] = await getCommentCount(e.id);
+          } catch {
+            next[e.id] = 0;
+          }
+        })
+      );
+      if (!cancelled) setCommentCounts(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, allEntries]);
 
   const resetReviewEntries = useCallback(async () => {
     setReviewListError(null);
@@ -284,11 +404,14 @@ function AppContent() {
   return (
     <BookLayout
       mobileNav={{
-        viewMode,
-        onHome: () => setViewMode('launch'),
-        onCalendar: () => setViewMode('calendar'),
+        activeTab: mobileTab,
+        onTab: (tabId) => {
+          if (tabId === 'home') setViewMode('launch');
+          else if (tabId === 'calendar') setViewMode('calendar');
+          else if (tabId === 'memories') setViewMode('feed');
+          else if (tabId === 'profile') setViewMode('profile');
+        },
         onAdd: goToTodayComposer,
-        onMood: () => setViewMode('review-mood'),
       }}
     >
       <OfflineBanner />
@@ -302,14 +425,16 @@ function AppContent() {
         </p>
       </div>
 
-      <YearNavigation
-        year={year}
-        onPrev={goPrev}
-        onNext={goNext}
-        disabled={isAnimating}
-      />
+      {(viewMode === 'calendar' || viewMode === 'review-date') && (
+        <YearNavigation
+          year={year}
+          onPrev={goPrev}
+          onNext={goNext}
+          disabled={isAnimating}
+        />
+      )}
 
-      {viewMode !== 'launch' && (
+      {viewMode !== 'launch' && viewMode !== 'feed' && viewMode !== 'profile' && (
         <>
           <div className="hidden md:block px-4 sm:px-6 pt-2 pb-1">
             <div className="flex items-center justify-between gap-2">
@@ -486,6 +611,28 @@ function AppContent() {
             setViewMode('calendar');
             openDateDetail(dateKey);
           }}
+        />
+      )}
+
+      {viewMode === 'feed' && (
+        <MemoryFeedScreen
+          allEntries={feedEntries}
+          loading={allEntriesLoading}
+          currentUserEmail={user?.email ?? ''}
+          onOpenComments={(e) => setCommentEntry(e)}
+          onToggleFavorite={(e) => void handleFeedFavorite(e)}
+          onDeleteEntry={(id) => void handleFeedDelete(id)}
+          onEditEntry={(e) => handleFeedEdit(e)}
+        />
+      )}
+
+      {viewMode === 'profile' && <ProfileScreen stats={profileStats} />}
+
+      {commentEntry && (
+        <CommentsScreen
+          entry={commentEntry}
+          onClose={() => setCommentEntry(null)}
+          onCommentsUpdated={(entryId) => void handleCommentCountRefresh(entryId)}
         />
       )}
 
