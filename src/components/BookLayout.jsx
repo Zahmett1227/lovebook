@@ -1,62 +1,54 @@
 export default function BookLayout({ children }) {
   return (
     <div
-      className="min-h-[100dvh] px-2 pt-3 pb-24 sm:pb-6 sm:px-6 flex items-start justify-center"
+      className="min-h-[100dvh] px-2 pt-3 pb-[max(5.5rem,env(safe-area-inset-bottom))] md:pb-8 sm:px-5 flex items-start justify-center bg-lb-page"
       style={{
         paddingTop: 'max(12px, env(safe-area-inset-top))',
-        paddingBottom: 'max(88px, env(safe-area-inset-bottom))',
       }}
     >
       <div className="w-full max-w-6xl relative">
-
-        {/* Stacked-pages shadow — depth illusion */}
+        {/* Dış derinlik — koyu sinema çerçevesi */}
         <div
-          className="absolute rounded-2xl"
+          className="absolute rounded-[1.35rem] bg-black/50 blur-sm"
           style={{
             inset: 0,
-            transform: 'translate(6px, 8px)',
-            background: '#d4aba3',
-            opacity: 0.34,
-            borderRadius: '1.5rem',
+            transform: 'translate(8px, 10px)',
           }}
         />
         <div
-          className="absolute rounded-2xl"
+          className="absolute rounded-[1.35rem] border border-lb-accent/25 bg-gradient-to-br from-lb-muted/40 to-transparent"
           style={{
             inset: 0,
-            transform: 'translate(3px, 4px)',
-            background: '#e5c4bc',
-            opacity: 0.54,
-            borderRadius: '1.5rem',
+            transform: 'translate(4px, 5px)',
           }}
         />
 
-        {/* Main book body */}
         <div
-          className="relative bg-[#fff9f6] rounded-2xl overflow-hidden"
+          className="relative rounded-[1.25rem] overflow-hidden border border-lb-border bg-lb-surface"
           style={{
-            minHeight: 'calc(100dvh - 24px)',
+            minHeight: 'calc(100dvh - 28px)',
             boxShadow:
-              '-10px 0 30px rgba(91,47,47,0.08), ' +
-              '10px 0  30px rgba(91,47,47,0.08), ' +
-              '0  28px 70px rgba(91,47,47,0.16), ' +
-              'inset 0 0 0 1px rgba(255,255,255,0.7)',
+              '0 0 0 1px rgba(227,176,92,0.18), ' +
+              '0 32px 80px rgba(0,0,0,0.55), ' +
+              'inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
         >
-          {/* Left-edge page lines (decorative) */}
+          {/* Altın şerit — üst vurgu */}
           <div
-            className="absolute inset-y-0 left-0 w-3 pointer-events-none"
+            className="h-px w-full pointer-events-none"
+            style={{ background: 'var(--lb-gold-line)' }}
+          />
+
+          <div
+            className="absolute inset-y-0 left-0 w-2 pointer-events-none opacity-40"
             style={{
-              background:
-                'linear-gradient(to right, rgba(131,78,78,0.08), transparent)',
+              background: 'linear-gradient(to right, rgba(227,176,92,0.25), transparent)',
             }}
           />
-          {/* Right-edge page lines */}
           <div
-            className="absolute inset-y-0 right-0 w-3 pointer-events-none"
+            className="absolute inset-y-0 right-0 w-2 pointer-events-none opacity-25"
             style={{
-              background:
-                'linear-gradient(to left, rgba(131,78,78,0.08), transparent)',
+              background: 'linear-gradient(to left, rgba(199,107,138,0.2), transparent)',
             }}
           />
 

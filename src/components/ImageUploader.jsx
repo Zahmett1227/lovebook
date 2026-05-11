@@ -54,10 +54,10 @@ export default function ImageUploader({ onFilesSelected, uploading, onError }) {
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className="flex items-center justify-center gap-1.5 text-sm text-[#2d674d] hover:text-[#1f6b4b] border border-[#cbe3d5] rounded-2xl px-4 min-h-[44px] hover:border-[#7bb395] transition disabled:opacity-50 active:scale-[0.98]"
+        className="flex items-center justify-center gap-2 text-sm text-lb-accent border border-lb-border bg-lb-elevated rounded-2xl px-4 min-h-[44px] hover:border-lb-accent/50 hover:bg-lb-muted/50 transition disabled:opacity-50 active:scale-[0.98] font-medium"
       >
-        <span>📷</span>
-        <span>{uploading ? 'Yükleniyor…' : 'Fotoğraf Ekle'}</span>
+        <span className="text-lg leading-none opacity-90" aria-hidden>⎙</span>
+        <span>{uploading ? 'Yükleniyor…' : 'Fotoğraf'}</span>
       </button>
     </div>
   );

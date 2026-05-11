@@ -1,8 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --lb-page: #0a090c;
+  --lb-canvas: #100e14;
+  --lb-surface: #16141c;
+  --lb-elevated: #1f1c27;
+  --lb-muted: #2a2633;
+  --lb-subtext: #9d94a8;
+  --lb-text: #f2eef8;
+  --lb-accent: #e3b05c;
+  --lb-accent-soft: rgba(227, 176, 92, 0.14);
+  --lb-accent2: #c76b8a;
+  --lb-border: #3f3a4d;
+  --lb-danger: #f87171;
+  --lb-ring: #e3b05c;
+  --lb-gold-line: linear-gradient(90deg, transparent, rgba(227, 176, 92, 0.45), transparent);
+}
 
 * {
   box-sizing: border-box;
@@ -18,12 +35,15 @@ body,
 
 body {
   margin: 0;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background: radial-gradient(circle at 12% 16%, #ffe8ef 0%, transparent 34%),
-              radial-gradient(circle at 86% 12%, #f8e6d4 0%, transparent 30%),
-              linear-gradient(145deg, #fdf8f3 0%, #f8efe8 48%, #efe4dd 100%);
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  background-color: var(--lb-page);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(227, 176, 92, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 100% 50%, rgba(199, 107, 138, 0.06), transparent 45%),
+    radial-gradient(ellipse 60% 40% at 0% 80%, rgba(99, 90, 120, 0.12), transparent 40%),
+    linear-gradient(180deg, var(--lb-canvas) 0%, var(--lb-page) 55%, #050508 100%);
   min-height: 100dvh;
-  color: #402b2d;
+  color: var(--lb-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
@@ -39,63 +59,70 @@ button {
 }
 
 .font-display {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .font-hero-title {
-  font-family: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .font-hero-sub {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
 }
 
-/* ─── Page-flip animations ─── */
+@layer components {
+  .lb-input {
+    @apply w-full rounded-2xl border border-lb-border bg-lb-elevated px-4 py-3 text-base text-lb-text placeholder:text-lb-subtext;
+    @apply focus:outline-none focus:ring-2 focus:ring-lb-accent focus:border-lb-accent;
+  }
+  .lb-btn-primary {
+    @apply rounded-2xl border border-lb-accent bg-lb-accent text-lb-page font-semibold px-5 min-h-[44px] transition;
+    @apply hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+  }
+  .lb-btn-ghost {
+    @apply rounded-2xl border border-lb-border bg-lb-surface text-lb-text px-4 min-h-[44px] transition;
+    @apply hover:bg-lb-elevated hover:border-lb-subtext active:scale-[0.98];
+  }
+}
 
-/* Forward: current page curls left, new page arrives from right */
+/* Sayfa geçişi: hafif slide + fade (performans) */
 @keyframes pageExitForward {
-  0%   { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
-  100% { opacity: 0; transform: perspective(1400px) rotateY(-14deg) translateX(-3%); }
+  0%   { opacity: 1; transform: translateX(0); filter: blur(0); }
+  100% { opacity: 0; transform: translateX(-12px); filter: blur(2px); }
 }
 @keyframes pageEnterForward {
-  0%   { opacity: 0; transform: perspective(1400px) rotateY(14deg) translateX(3%); }
-  100% { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+  0%   { opacity: 0; transform: translateX(14px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateX(0); filter: blur(0); }
 }
-
-/* Backward: current page curls right, new page arrives from left */
 @keyframes pageExitBack {
-  0%   { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
-  100% { opacity: 0; transform: perspective(1400px) rotateY(14deg) translateX(3%); }
+  0%   { opacity: 1; transform: translateX(0); filter: blur(0); }
+  100% { opacity: 0; transform: translateX(12px); filter: blur(2px); }
 }
 @keyframes pageEnterBack {
-  0%   { opacity: 0; transform: perspective(1400px) rotateY(-14deg) translateX(-3%); }
-  100% { opacity: 1; transform: perspective(1400px) rotateY(0deg) translateX(0); }
+  0%   { opacity: 0; transform: translateX(-14px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateX(0); filter: blur(0); }
 }
 
-.page-exit-forward  { animation: pageExitForward  0.30s ease-in  forwards; }
-.page-enter-forward { animation: pageEnterForward 0.35s ease-out forwards; }
-.page-exit-back     { animation: pageExitBack     0.30s ease-in  forwards; }
-.page-enter-back    { animation: pageEnterBack    0.35s ease-out forwards; }
+.page-exit-forward  { animation: pageExitForward  0.22s ease-in forwards; }
+.page-enter-forward { animation: pageEnterForward 0.26s ease-out forwards; }
+.page-exit-back     { animation: pageExitBack     0.22s ease-in forwards; }
+.page-enter-back    { animation: pageEnterBack    0.26s ease-out forwards; }
 
-/* ─── Book spine shadow (applied inside YearPage) ─── */
 .book-spine {
   background: linear-gradient(
     to right,
-    rgba(0,0,0,0.07) 0%,
-    rgba(0,0,0,0.03) 35%,
-    rgba(0,0,0,0.03) 65%,
-    rgba(0,0,0,0.07) 100%
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(227, 176, 92, 0.12) 45%,
+    rgba(227, 176, 92, 0.12) 55%,
+    rgba(0, 0, 0, 0.35) 100%
   );
 }
 
-/* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #ba8f8a; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #5c5468; border-radius: 3px; }
 
-/* ─── Day cell ─── */
-.day-cell:hover { transform: translateY(-1px) scale(1.03); }
+.day-cell:hover { transform: translateY(-1px) scale(1.02); }
 .day-cell:active { transform: scale(0.98); }
 
-/* ─── Lightbox ─── */
-.lightbox-overlay { backdrop-filter: blur(4px); }
+.lightbox-overlay { backdrop-filter: blur(8px); }

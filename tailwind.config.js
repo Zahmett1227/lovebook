@@ -7,11 +7,25 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        serif: ['Cormorant Garamond', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
-        editorial: ['Fraunces', 'Cormorant Garamond', 'Georgia', 'serif'],
-        body: ['DM Sans', 'Inter', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
+        editorial: ['Playfair Display', 'Georgia', 'serif'],
+        body: ['Source Sans 3', 'system-ui', 'sans-serif'],
       },
       colors: {
+        lb: {
+          page: 'var(--lb-page)',
+          canvas: 'var(--lb-canvas)',
+          surface: 'var(--lb-surface)',
+          elevated: 'var(--lb-elevated)',
+          muted: 'var(--lb-muted)',
+          subtext: 'var(--lb-subtext)',
+          text: 'var(--lb-text)',
+          accent: 'var(--lb-accent)',
+          accent2: 'var(--lb-accent2)',
+          border: 'var(--lb-border)',
+          danger: 'var(--lb-danger)',
+          ring: 'var(--lb-ring)',
+        },
         cream: {
           50: '#fdfaf5',
           100: '#faf3e7',
@@ -26,12 +40,11 @@ export default {
         },
       },
       boxShadow: {
-        book: '0 20px 60px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1)',
-        editorial: '0 16px 40px rgba(96, 62, 66, 0.14), 0 2px 10px rgba(96, 62, 66, 0.08)',
+        book: '0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(227,176,92,0.12)',
+        editorial: '0 20px 50px rgba(0,0,0,0.45), 0 0 40px rgba(199,107,138,0.08)',
+        glow: '0 0 32px rgba(227, 176, 92, 0.15)',
       },
     },
   },
   plugins: [],
 }
-
-

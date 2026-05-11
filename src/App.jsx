@@ -284,13 +284,13 @@ function AppContent() {
   return (
     <BookLayout>
       <OfflineBanner />
-      {/* Book title — LaunchMenu ile uyumlu sıcak editorial ton */}
-      <div className="border-b border-[#ead4ce] bg-gradient-to-r from-[#fff9f8] via-[#fbeee8] to-[#f8e7df] py-3 px-4 text-center">
-        <h1 className="font-hero-title text-2xl sm:text-3xl font-semibold text-[#5a3738] tracking-tight">
+      <div className="border-b border-lb-border bg-gradient-to-r from-lb-canvas via-lb-elevated to-lb-canvas py-3.5 px-4 text-center relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lb-accent/40 to-transparent" />
+        <h1 className="font-hero-title text-2xl sm:text-3xl font-semibold text-lb-text tracking-tight">
           LoveBook
         </h1>
-        <p className="font-hero-sub text-[10px] text-[#a0726c] mt-1 uppercase tracking-[0.2em]">
-          Bizim Günlüğümüz
+        <p className="font-hero-sub text-[10px] text-lb-accent mt-1.5 uppercase tracking-[0.28em]">
+          Bizim günlüğümüz
         </p>
       </div>
 
@@ -302,28 +302,58 @@ function AppContent() {
       />
 
       {viewMode !== 'launch' && (
-        <div className="px-4 sm:px-6 pt-2 pb-1">
-          <div className="flex items-center justify-between gap-2">
+        <>
+          <div className="hidden md:block px-4 sm:px-6 pt-2 pb-1">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setViewMode('launch')}
+                className="text-xs sm:text-sm border border-lb-border bg-lb-elevated hover:bg-lb-muted text-lb-text rounded-full px-4 py-2 min-h-[44px] transition active:scale-[0.98]"
+              >
+                Menüye dön
+              </button>
+              <button
+                type="button"
+                onClick={openRandomMemory}
+                disabled={randomLoading}
+                className="text-xs sm:text-sm border border-lb-accent/40 bg-lb-accent/15 hover:bg-lb-accent/25 text-lb-accent rounded-full px-4 py-2 min-h-[44px] transition active:scale-[0.98] disabled:opacity-50 font-medium"
+              >
+                {randomLoading ? 'Açılıyor…' : 'Rastgele anı'}
+              </button>
+            </div>
+            {randomStatus && (
+              <div className="mt-2">
+                <EmptyState message={randomStatus} />
+              </div>
+            )}
+          </div>
+          <nav
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex gap-2 border-t border-lb-border bg-lb-surface/95 backdrop-blur-lg px-3 pt-2 shadow-[0_-8px_32px_rgba(0,0,0,0.4)]"
+            style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
+            aria-label="Hızlı işlemler"
+          >
             <button
+              type="button"
               onClick={() => setViewMode('launch')}
-              className="text-xs sm:text-sm border border-[#ead4ce] bg-white/90 hover:bg-[#fff6f3] text-[#6f4548] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98]"
+              className="flex-1 rounded-xl border border-lb-border bg-lb-elevated py-3 text-sm font-medium text-lb-text active:scale-[0.98]"
             >
-              Menüye Dön
+              Menü
             </button>
             <button
+              type="button"
               onClick={openRandomMemory}
               disabled={randomLoading}
-              className="text-xs sm:text-sm border border-[#ead4ce] bg-white/90 hover:bg-[#fff6f3] text-[#6f4548] rounded-full px-3 py-2 min-h-[40px] transition active:scale-[0.98] disabled:opacity-60"
+              className="flex-1 rounded-xl border border-lb-accent/50 bg-lb-accent/20 py-3 text-sm font-semibold text-lb-accent disabled:opacity-50 active:scale-[0.98]"
             >
-              {randomLoading ? 'Açılıyor…' : '🎲 Rastgele Anı'}
+              {randomLoading ? '…' : 'Rastgele'}
             </button>
-          </div>
+          </nav>
           {randomStatus && (
-            <div className="mt-2">
+            <div className="md:hidden px-4 mt-1 pb-1">
               <EmptyState message={randomStatus} />
             </div>
           )}
-        </div>
+        </>
       )}
 
       {viewMode === 'launch' && (
@@ -338,55 +368,55 @@ function AppContent() {
       {(viewMode === 'calendar' || viewMode === 'review-date') && (
         <>
           <div className="px-4 sm:px-6 pt-2 pb-2">
-            <div className="rounded-2xl border border-[#ead4ce] bg-white/80 p-3 shadow-editorial">
+            <div className="rounded-2xl border border-lb-border bg-lb-elevated/80 p-3 shadow-editorial ring-1 ring-white/[0.03]">
               <button
                 type="button"
                 onClick={() => setShowSessionCost((v) => !v)}
-                className="w-full text-left text-xs font-semibold text-[#633f41] flex items-center justify-between gap-2 py-1 min-h-[40px]"
+                className="w-full text-left text-xs font-semibold text-lb-text flex items-center justify-between gap-2 py-1 min-h-[40px]"
                 aria-expanded={showSessionCost}
               >
-                <span>Son oturum yüklemesi / tahmini maliyet</span>
-                <span className="text-[#a0726c] shrink-0" aria-hidden>
+                <span>Son oturum / tahmini maliyet</span>
+                <span className="text-lb-accent shrink-0" aria-hidden>
                   {showSessionCost ? '▼' : '▶'}
                 </span>
               </button>
               {showSessionCost && (
-                <div className="rounded-xl border border-[#e7d3cb] bg-[#fffaf8] p-2 mb-3 mt-1">
-                  <div className="flex items-center justify-between text-[11px] text-[#7a4f4f]">
+                <div className="rounded-xl border border-lb-border bg-lb-canvas p-2 mb-3 mt-1">
+                  <div className="flex items-center justify-between text-[11px] text-lb-subtext">
                     <span>Son yükleme oturumu</span>
-                    <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
+                    <span className="text-lb-text">{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[#f0ded8] overflow-hidden mt-1.5">
+                  <div className="h-1.5 rounded-full bg-lb-muted overflow-hidden mt-1.5">
                     <div
-                      className="h-full bg-[#8f5f5f]"
+                      className="h-full bg-lb-accent"
                       style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-[#8f6661] mt-1">
+                  <p className="text-[10px] text-lb-subtext mt-1">
                     Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
                   </p>
                 </div>
               )}
-              <h3 className="text-sm font-semibold text-[#633f41] mb-2 mt-1">Son Anılar</h3>
+              <h3 className="text-sm font-semibold text-lb-text mb-2 mt-1">Son anılar</h3>
               {recentListError && (
                 <div
                   role="alert"
-                  className="mb-2 rounded-xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2 text-xs text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                  className="mb-2 rounded-xl border border-lb-danger/35 bg-lb-danger/10 px-3 py-2 text-xs text-lb-text flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                 >
                   <span>{recentListError}</span>
                   <button
                     type="button"
                     onClick={() => refreshRecentEntries()}
-                    className="shrink-0 rounded-lg border border-[#ddbcb3] bg-white px-2.5 py-1 text-[11px] font-medium text-[#6f4548]"
+                    className="shrink-0 rounded-lg border border-lb-border bg-lb-elevated px-2.5 py-1 text-[11px] font-medium text-lb-accent"
                   >
                     Tekrar dene
                   </button>
                 </div>
               )}
               {recentEntriesLoading ? (
-                <p className="text-xs text-[#8f6661]">Yükleniyor…</p>
+                <p className="text-xs text-lb-subtext">Yükleniyor…</p>
               ) : latestEntries.length === 0 ? (
-                <p className="text-xs text-[#8f6661]">Henüz anı eklenmedi.</p>
+                <p className="text-xs text-lb-subtext">Henüz anı eklenmedi.</p>
               ) : (
                 <div className="space-y-2">
                   {latestEntries.map((entry) => {
@@ -398,7 +428,7 @@ function AppContent() {
                       <button
                         key={entry.id}
                         onClick={() => openDateDetail(entry.date)}
-                        className="w-full text-left rounded-xl border border-[#ead8d1] bg-[#fffaf8] hover:bg-[#fff3ef] px-3 py-2 transition active:scale-[0.99]"
+                        className="w-full text-left rounded-xl border border-lb-border bg-lb-canvas hover:bg-lb-muted/50 px-3 py-2 transition active:scale-[0.99]"
                       >
                         <div className="flex items-center gap-2">
                           {previewImage ? (
@@ -408,15 +438,15 @@ function AppContent() {
                               className="w-10 h-10 rounded-lg object-cover shrink-0"
                             />
                           ) : previewVideo ? (
-                            <div className="w-10 h-10 rounded-lg shrink-0 bg-[#f0ded8] text-[#7a4f4f] flex items-center justify-center text-[10px]">
+                            <div className="w-10 h-10 rounded-lg shrink-0 bg-lb-muted text-lb-accent flex items-center justify-center text-[10px] font-semibold">
                               VIDEO
                             </div>
                           ) : null}
                           <div className="min-w-0 flex-1">
-                            <p className="text-[11px] text-[#9a726c]">
+                            <p className="text-[11px] text-lb-subtext">
                               {entry.date} • {entry.userDisplayName}
                             </p>
-                            <p className="text-xs text-[#5e3f3f] truncate">
+                            <p className="text-xs text-lb-text truncate">
                               {entry.text || entry.title || 'Metin yok'}
                             </p>
                           </div>

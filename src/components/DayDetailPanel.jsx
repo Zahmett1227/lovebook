@@ -87,14 +87,13 @@ export default function DayDetailPanel({
     try {
       if (editingEntry) {
         await updateEntry(editingEntry.id, data);
-        setSuccessMessage('Ani guncellendi.');
+        setSuccessMessage('Anı güncellendi.');
       } else {
         await addEntry(entryData);
-        setSuccessMessage('Yeni ani eklendi.');
+        setSuccessMessage('Yeni anı eklendi.');
       }
       setShowForm(false);
       setEditingEntry(null);
-      // refresh is fire-and-forget; errors are handled inside useEntries
       onRefresh();
     } catch (err) {
       console.error('[FIRESTORE_CREATE_ERROR]', getErrorMessage(err));
@@ -136,24 +135,24 @@ export default function DayDetailPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lightbox-overlay">
       <div
-        className="bg-[#f7fdf9] w-full sm:max-w-4xl rounded-t-3xl sm:rounded-2xl shadow-book border border-[#cbe3d5] flex flex-col max-h-[100dvh] sm:max-h-[90dvh]"
+        className="bg-lb-surface w-full sm:max-w-4xl rounded-t-3xl sm:rounded-2xl shadow-book border border-lb-border flex flex-col max-h-[100dvh] sm:max-h-[90dvh] ring-1 ring-lb-accent/15"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-[#cbe3d5] shrink-0 bg-[#edf9f2]">
-          <h2 className="font-display text-lg font-semibold text-[#174330]">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-lb-border shrink-0 bg-lb-canvas/90">
+          <h2 className="font-display text-lg font-semibold text-lb-text">
             {formatDateDisplay(dateKey)}
           </h2>
           <div className="flex items-center gap-3">
             {!showForm && (
               <button
+                type="button"
                 onClick={() => { setEditingEntry(null); setSaveError(''); setShowForm(true); }}
-                className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white rounded-full px-4 min-h-[44px] active:scale-[0.98] transition"
+                className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px]"
               >
-                + Anı Ekle
+                + Anı ekle
               </button>
             )}
             {showForm && (
@@ -161,12 +160,16 @@ export default function DayDetailPanel({
                 type="submit"
                 form={formId}
                 disabled={isSaving}
-                className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white rounded-full px-4 min-h-[44px] active:scale-[0.98] transition"
+                className="text-sm lb-btn-primary rounded-full px-4 min-h-[44px] disabled:opacity-50"
               >
                 {isSaving ? 'Kaydediliyor…' : (editingEntry ? 'Güncelle' : 'Kaydet')}
               </button>
             )}
-            <button onClick={onClose} className="text-[#6e9f87] hover:text-[#1f6b4b] text-2xl leading-none w-11 h-11 rounded-full active:scale-[0.98] transition">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-lb-subtext hover:text-lb-accent text-2xl leading-none w-11 h-11 rounded-full hover:bg-lb-elevated active:scale-[0.98] transition"
+            >
               ×
             </button>
           </div>
@@ -174,7 +177,7 @@ export default function DayDetailPanel({
 
         {successMessage && (
           <div className="px-4 pt-3 shrink-0">
-            <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2">
+            <p className="text-sm text-lb-accent bg-lb-accent/10 border border-lb-accent/30 rounded-2xl px-3 py-2">
               {successMessage}
             </p>
           </div>
@@ -182,12 +185,12 @@ export default function DayDetailPanel({
 
         {loadError && !loading && (
           <div className="px-4 pt-3 shrink-0" role="alert">
-            <div className="rounded-2xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2.5 text-xs text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="rounded-2xl border border-lb-danger/35 bg-lb-danger/10 px-3 py-2.5 text-xs text-lb-text flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <span>{loadError}</span>
               <button
                 type="button"
                 onClick={onRefresh}
-                className="shrink-0 rounded-xl border border-[#ddbcb3] bg-white px-3 py-1.5 text-xs font-medium text-[#6f4548] active:scale-[0.98]"
+                className="shrink-0 rounded-xl border border-lb-border bg-lb-elevated px-3 py-1.5 text-xs font-medium text-lb-accent active:scale-[0.98]"
               >
                 Tekrar dene
               </button>
@@ -195,11 +198,10 @@ export default function DayDetailPanel({
           </div>
         )}
 
-        {/* Form */}
         {showForm && (
-          <div className="px-4 sm:px-5 py-4 border-b border-[#cbe3d5] shrink-0 space-y-2 bg-white/80">
+          <div className="px-4 sm:px-5 py-4 border-b border-lb-border shrink-0 space-y-2 bg-lb-canvas/50">
             {saveError && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-xs text-lb-danger bg-lb-danger/10 border border-lb-danger/30 rounded-lg px-3 py-2">
                 {saveError}
               </p>
             )}
@@ -216,19 +218,19 @@ export default function DayDetailPanel({
           </div>
         )}
 
-        {/* Entries */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-lb-page/30">
           {loading ? (
-            <LoadingSpinner message="Anılar yükleniyor…" />
+            <div className="py-12">
+              <LoadingSpinner message="Anılar yükleniyor…" />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#cbe3d5]">
-              {/* Left */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-lb-border">
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-gradient-to-r from-[#e8f6ee] to-[#e7f0ff] border border-[#c5e1d1] px-3 py-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2d7b58] to-[#3f8e6a] text-white text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-lb-elevated border border-lb-border px-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-lb-accent text-lb-page text-xs font-bold flex items-center justify-center">
                     {leftProfile.displayName?.[0] ?? 'A'}
                   </div>
-                  <span className="text-xs font-semibold text-[#2a5f45] uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-lb-text uppercase tracking-wide">
                     {leftProfile.displayName}
                   </span>
                 </div>
@@ -245,13 +247,12 @@ export default function DayDetailPanel({
                 }
               </div>
 
-              {/* Right */}
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-gradient-to-r from-[#e6f4ec] to-[#efe9ff] border border-[#c5e1d1] px-3 py-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4a9b76] to-[#629fda] text-white text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2 mb-2 rounded-2xl bg-lb-elevated border border-lb-border px-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-lb-accent2 text-lb-text text-xs font-bold flex items-center justify-center">
                     {rightProfile.displayName?.[0] ?? 'T'}
                   </div>
-                  <span className="text-xs font-semibold text-[#2a5f45] uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-lb-text uppercase tracking-wide">
                     {rightProfile.displayName}
                   </span>
                 </div>

@@ -16,7 +16,7 @@ export default function ImageLightbox({ images, startIndex, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 lightbox-overlay flex items-center justify-center p-4"
+      className="fixed inset-0 z-[110] bg-black/85 lightbox-overlay flex items-center justify-center p-4"
       onClick={onClose}
     >
       <button

@@ -5,7 +5,7 @@ import VideoUploader from './VideoUploader';
 import { uploadImages, uploadVideos } from '../services/storageService';
 import { normalizeImageUrls, normalizeVideoItems } from '../utils/imageUtils';
 import { bytesToMb, estimateSessionCost } from '../utils/costUtils';
-import { getErrorMessage } from '../utils/errorUtils';
+import { getErrorMessage, storageUserMessage } from '../utils/errorUtils';
 
 export default function EntryForm({
   dateKey,
@@ -61,9 +61,9 @@ export default function EntryForm({
         setUploadError(`Bazı fotoğraflar yüklenemedi (${uploaded.length}/${files.length}).`);
       }
     } catch (err) {
-      const message = getErrorMessage(err, 'Fotoğraf yüklenemedi.');
-      console.error('[STORAGE_UPLOAD_ERROR]', message);
-      setUploadError(`Fotoğraf yüklenemedi: ${message}`);
+      const message = storageUserMessage(err) || getErrorMessage(err, 'Fotoğraf yüklenemedi.');
+      console.error('[STORAGE_UPLOAD_ERROR]', err?.code, message);
+      setUploadError(message);
     } finally {
       setUploading(false);
     }
@@ -81,9 +81,9 @@ export default function EntryForm({
         setUploadError(`Bazı videolar yüklenemedi (${uploaded.length}/${files.length}).`);
       }
     } catch (err) {
-      const message = getErrorMessage(err, 'Video yüklenemedi.');
-      console.error('[STORAGE_UPLOAD_ERROR]', message);
-      setUploadError(`Video yüklenemedi: ${message}`);
+      const message = storageUserMessage(err) || getErrorMessage(err, 'Video yüklenemedi.');
+      console.error('[STORAGE_UPLOAD_ERROR]', err?.code, message);
+      setUploadError(message);
     } finally {
       setUploading(false);
     }
@@ -103,12 +103,10 @@ export default function EntryForm({
     if (externalSaving) return;
     setSaving(true);
     try {
-      // onSave handles its own error state and logging
       await onSave({
         title: title.trim(),
         text: text.trim(),
         tag: selectedTag || '',
-        // Backward compatibility for existing reads expecting mood.
         mood: selectedTag || '',
         favorite: initial?.favorite ?? false,
         imageUrls: images,
@@ -122,7 +120,7 @@ export default function EntryForm({
   return (
     <form id={formId} onSubmit={handleSubmit} className="space-y-3">
       {uploadError && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+        <p className="text-xs text-lb-danger bg-lb-danger/10 border border-lb-danger/30 rounded-xl px-3 py-2">
           {uploadError}
         </p>
       )}
@@ -132,7 +130,7 @@ export default function EntryForm({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Başlık (isteğe bağlı)"
-        className="w-full border border-[#cbe3d5] rounded-2xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#7bb395] text-[#174330]"
+        className="lb-input"
       />
 
       <textarea
@@ -140,7 +138,7 @@ export default function EntryForm({
         onChange={(e) => setText(e.target.value)}
         placeholder="Bugün ne yaşadın? Ne hissettin?"
         rows={5}
-        className="w-full border border-[#cbe3d5] rounded-2xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#7bb395] text-[#174330] resize-y min-h-[120px]"
+        className="lb-input resize-y min-h-[120px]"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -151,8 +149,8 @@ export default function EntryForm({
             onClick={() => setSelectedTag(selectedTag === tag.id ? '' : tag.id)}
             className={`text-sm min-h-[44px] rounded-full px-3 border active:scale-[0.98] transition ${
               selectedTag === tag.id
-                ? `${tag.color} shadow-sm`
-                : 'bg-white text-[#2e664c] border-[#cbe3d5] hover:border-[#7bb395]'
+                ? `${tag.color} shadow-glow`
+                : 'bg-lb-canvas text-lb-subtext border-lb-border hover:border-lb-accent/40 hover:text-lb-text'
             }`}
           >
             {tag.emoji} {tag.label}
@@ -167,12 +165,12 @@ export default function EntryForm({
               <img
                 src={typeof img === 'object' ? img.url : img}
                 alt=""
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-xl border border-lb-border"
               />
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 w-6 h-6 bg-black/65 text-white rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
+                className="absolute top-1 right-1 w-7 h-7 bg-black/70 text-lb-text rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
               >
                 ×
               </button>
@@ -184,7 +182,7 @@ export default function EntryForm({
       {videos.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {videos.map((video, i) => (
-            <div key={i} className="relative rounded-xl overflow-hidden border border-[#cbe3d5] bg-white">
+            <div key={i} className="relative rounded-xl overflow-hidden border border-lb-border bg-lb-canvas">
               <video
                 src={video.url}
                 controls
@@ -194,7 +192,7 @@ export default function EntryForm({
               <button
                 type="button"
                 onClick={() => removeVideo(i)}
-                className="absolute top-1 right-1 w-6 h-6 bg-black/65 text-white rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
+                className="absolute top-1 right-1 w-7 h-7 bg-black/70 text-lb-text rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
               >
                 ×
               </button>
@@ -204,19 +202,19 @@ export default function EntryForm({
       )}
 
       {sessionFiles.length > 0 && (
-        <div className="rounded-2xl border border-[#cbe3d5] bg-[#f4fbf7] p-3 space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#2e664c]">
-            <span>Blaze Tahmini (bu yükleme oturumu)</span>
-            <span>{sessionSizeMb.toFixed(2)} MB</span>
+        <div className="rounded-2xl border border-lb-border bg-lb-canvas p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs text-lb-subtext">
+            <span>Blaze tahmini (bu oturum)</span>
+            <span className="text-lb-text font-medium">{sessionSizeMb.toFixed(2)} MB</span>
           </div>
-          <div className="h-2 rounded-full bg-[#dbeee2] overflow-hidden">
+          <div className="h-2 rounded-full bg-lb-muted overflow-hidden">
             <div
-              className="h-full bg-[#2d7b58] transition-all"
+              className="h-full bg-lb-accent transition-all"
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-          <p className="text-[11px] text-[#4b7f66]">
-            Aylık depolama: ${sessionCost.storageUsd.toFixed(4)} • İşlem: ${sessionCost.operationUsd.toFixed(4)} • Toplam: ${sessionCost.totalUsd.toFixed(4)}
+          <p className="text-[11px] text-lb-subtext">
+            Depolama: ${sessionCost.storageUsd.toFixed(4)} • İşlem: ${sessionCost.operationUsd.toFixed(4)} • Toplam: ${sessionCost.totalUsd.toFixed(4)}
           </p>
         </div>
       )}
@@ -238,7 +236,7 @@ export default function EntryForm({
           <button
             type="button"
             onClick={onCancel}
-            className="text-sm text-[#6e9f87] hover:text-[#1f6b4b] px-4 min-h-[44px] rounded-2xl border border-[#cbe3d5] hover:border-[#7bb395] transition active:scale-[0.98] flex-1 sm:flex-none"
+            className="lb-btn-ghost text-sm px-4 flex-1 sm:flex-none"
           >
             İptal
           </button>
@@ -246,7 +244,7 @@ export default function EntryForm({
             <button
               type="submit"
               disabled={saving || uploading || externalSaving}
-              className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white px-5 min-h-[44px] rounded-2xl transition disabled:opacity-60 active:scale-[0.98] flex-1 sm:flex-none"
+              className="lb-btn-primary text-sm px-6 flex-1 sm:flex-none disabled:opacity-50"
             >
               {saving || externalSaving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
             </button>

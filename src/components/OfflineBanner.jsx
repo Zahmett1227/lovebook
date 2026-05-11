@@ -22,7 +22,7 @@ export default function OfflineBanner() {
     <div
       role="alert"
       aria-live="polite"
-      className="mx-3 sm:mx-6 mt-3 rounded-xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2.5 text-center text-xs sm:text-sm text-[#6b3a38]"
+      className="mx-3 sm:mx-6 mt-3 rounded-xl border border-lb-accent/40 bg-lb-accent/10 px-3 py-2.5 text-center text-xs sm:text-sm text-lb-text"
     >
       Çevrimdışı görünüyorsun. Bağlantı gelince içerik yenilenecek; gerekirse sayfayı yenile.
     </div>

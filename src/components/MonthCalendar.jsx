@@ -5,10 +5,10 @@ import { getMemoryTagEmoji, normalizeMemoryTagId } from '../config/memoryTags';
 import DayCell from './DayCell';
 
 const MONTH_PALETTE = [
-  'from-[#fff9f7] to-[#f9ece5]',
-  'from-[#fff8f5] to-[#f4ebe3]',
-  'from-[#fffaf8] to-[#f8ede8]',
-  'from-[#fff7f3] to-[#f3e6de]',
+  'from-lb-elevated/90 to-lb-canvas',
+  'from-lb-muted/40 to-lb-surface',
+  'from-lb-elevated to-lb-canvas/95',
+  'from-lb-surface to-lb-muted/30',
 ];
 
 function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
@@ -24,22 +24,19 @@ function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDa
   }, [entriesByDate]);
 
   return (
-    <div className={`bg-gradient-to-br ${paletteClass} backdrop-blur rounded-[1.25rem] border border-[#e8d7d0] p-3.5 flex flex-col gap-2 shadow-editorial`}>
-      {/* Month name */}
-      <h3 className="font-display text-center text-[1.05rem] font-semibold text-[#6d4346] mb-1 tracking-[0.02em]">
+    <div className={`bg-gradient-to-br ${paletteClass} rounded-[1.2rem] border border-lb-border p-3.5 flex flex-col gap-2 shadow-editorial ring-1 ring-white/[0.03]`}>
+      <h3 className="font-display text-center text-[1.05rem] font-semibold text-lb-text mb-1 tracking-[0.04em]">
         {MONTH_NAMES[month - 1]}
       </h3>
 
-      {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAY_NAMES.map((w) => (
-          <div key={w} className="text-center text-[10px] text-[#a17872] font-semibold uppercase tracking-[0.08em]">
+          <div key={w} className="text-center text-[10px] text-lb-subtext font-semibold uppercase tracking-[0.12em]">
             {w}
           </div>
         ))}
       </div>
 
-      {/* Day cells */}
       <div className="grid grid-cols-7 gap-1.5">
         {cells.map((cell, i) =>
           cell ? (
@@ -54,7 +51,10 @@ function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDa
               weekdaySlot={i % 7}
             />
           ) : (
-            <div key={`empty-${i}`} className="h-11 min-h-[44px] rounded-[0.95rem] border border-dashed border-[#ead8d1] bg-[#fff9f7]/60" />
+            <div
+              key={`empty-${i}`}
+              className="h-11 min-h-[44px] rounded-[0.95rem] border border-dashed border-lb-border/60 bg-lb-canvas/40"
+            />
           )
         )}
       </div>

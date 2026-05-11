@@ -8,56 +8,56 @@ export default function YearNavigation({ year, onPrev, onNext, disabled }) {
   const profile = user ? USER_PROFILES[user.email] : null;
 
   return (
-    <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-b border-[#cbe3d5] bg-[#eef9f2]/90 backdrop-blur">
-      {/* User avatar + name */}
+    <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-b border-lb-border bg-lb-canvas/95 backdrop-blur-md">
       <div className="flex items-center gap-2 min-w-[72px]">
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-sm ${
-            profile?.side === 'left' ? 'bg-amber-600' : 'bg-rose-400'
+          className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-lb-page shadow-md ring-2 ring-lb-accent/30 ${
+            profile?.side === 'left' ? 'bg-lb-accent' : 'bg-lb-accent2'
           }`}
         >
           {profile?.displayName?.[0] ?? '?'}
         </div>
-        <span className="text-sm text-[#275740] hidden sm:block font-medium">
+        <span className="text-sm text-lb-subtext hidden sm:block font-medium max-w-[100px] truncate">
           {profile?.displayName}
         </span>
       </div>
 
-      {/* Year navigation */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <button
+          type="button"
           onClick={onPrev}
           disabled={disabled || year <= MIN_YEAR}
-          className="w-11 h-11 min-h-[44px] rounded-full flex items-center justify-center text-lg text-[#2f6b51] hover:bg-[#ddefe3] active:scale-[0.98] disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none"
+          className="w-11 h-11 min-h-[44px] rounded-full flex items-center justify-center text-xl text-lb-accent hover:bg-lb-elevated border border-transparent hover:border-lb-border active:scale-[0.98] disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none"
           aria-label="Önceki yıl"
         >
           ‹
         </button>
 
-        <div className="relative flex flex-col items-center">
-          <span className="font-display text-2xl font-semibold text-[#174330] min-w-[4ch] text-center leading-none">
+        <div className="relative flex flex-col items-center px-2">
+          <span className="font-display text-2xl sm:text-3xl font-semibold text-lb-text min-w-[4.5ch] text-center leading-none tracking-tight">
             {year}
           </span>
-          <span className="text-[9px] text-[#69a186] uppercase tracking-widest mt-0.5 select-none">
-            {disabled ? 'sayfa çevriliyor…' : 'yıl'}
+          <span className="text-[9px] text-lb-subtext uppercase tracking-[0.2em] mt-1 select-none">
+            {disabled ? 'geçiş…' : 'yıl'}
           </span>
         </div>
 
         <button
+          type="button"
           onClick={onNext}
           disabled={disabled}
-          className="w-11 h-11 min-h-[44px] rounded-full flex items-center justify-center text-lg text-[#2f6b51] hover:bg-[#ddefe3] active:scale-[0.98] disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none"
+          className="w-11 h-11 min-h-[44px] rounded-full flex items-center justify-center text-xl text-lb-accent hover:bg-lb-elevated border border-transparent hover:border-lb-border active:scale-[0.98] disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none"
           aria-label="Sonraki yıl"
         >
           ›
         </button>
       </div>
 
-      {/* Logout */}
       <div className="flex items-center min-w-[72px] justify-end">
         <button
+          type="button"
           onClick={logout}
-          className="text-xs text-[#679980] hover:text-[#1f6b4b] transition-colors px-3 min-h-[44px] rounded-full hover:bg-[#ddefe3] active:scale-[0.98]"
+          className="text-xs text-lb-subtext hover:text-lb-accent transition-colors px-3 min-h-[44px] rounded-full hover:bg-lb-elevated border border-transparent hover:border-lb-border active:scale-[0.98]"
         >
           Çıkış
         </button>

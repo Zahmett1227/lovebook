@@ -24,3 +24,24 @@ export function firestoreUserMessage(err) {
   return 'Veriler yüklenemedi. Sayfayı yenileyebilir veya biraz sonra tekrar deneyebilirsin.';
 }
 
+/** Firebase Storage SDK hata kodları → kullanıcı mesajı */
+export function storageUserMessage(err) {
+  const code = typeof err?.code === 'string' ? err.code : '';
+  if (code === 'storage/unauthorized') {
+    return 'Depolama izni yok. Oturumunun açık olduğundan emin ol. Sorun sürerse Storage kurallarının deploy edildiğini kontrol et (firebase deploy --only storage).';
+  }
+  if (code === 'storage/canceled') {
+    return 'Yükleme iptal edildi.';
+  }
+  if (code === 'storage/quota-exceeded') {
+    return 'Depolama kotası aşıldı.';
+  }
+  if (code === 'storage/unauthenticated') {
+    return 'Oturum gerekli. Lütfen tekrar giriş yap.';
+  }
+  if (code === 'storage/invalid-checksum' || code === 'storage/retry-limit-exceeded') {
+    return 'Dosya aktarımı başarısız. Ağı kontrol edip tekrar dene.';
+  }
+  return getErrorMessage(err, 'Dosya yüklenemedi.');
+}
+

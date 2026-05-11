@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// LoveBook: memories/{year}/{month}/{day}/{userId}/{fileName}
+// Yükleme yolu src/services/storageService.js ile aynı olmalı.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /memories/{year}/{month}/{day}/{userId}/{fileName} {
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner() {
+        return signedIn() && request.auth.uid == userId;
+      }
+
+      function validMediaType() {
+        return request.resource.contentType.matches('image/.*')
+          || request.resource.contentType.matches('video/.*');
+      }
+
+      // VideoUploader max 100 MB + marj (~120 MiB)
+      function underSizeLimit() {
+        return request.resource.size < 126877696;
+      }
+
+      allow read: if signedIn();
+
+      allow create: if isOwner() && validMediaType() && underSizeLimit();
+
+      allow update: if isOwner() && validMediaType() && underSizeLimit();
+
+      allow delete: if isOwner();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../firebase';
 import { normalizeDateKey } from '../utils/dateUtils';
-import { getErrorMessage } from '../utils/errorUtils';
+import { getErrorMessage, storageUserMessage } from '../utils/errorUtils';
 
 function buildStorageDateParts(date) {
   const safeDate = normalizeDateKey(date);
@@ -47,7 +47,9 @@ export async function uploadImages(files, date, userId) {
   const success = settled.filter((item) => item.status === 'fulfilled').map((item) => item.value);
   if (success.length === 0) {
     const firstError = settled.find((item) => item.status === 'rejected');
-    throw new Error(getErrorMessage(firstError?.reason, 'Fotoğraflar yüklenemedi.'));
+    const reason = firstError?.reason;
+    console.error('[STORAGE_UPLOAD]', reason?.code, getErrorMessage(reason));
+    throw new Error(storageUserMessage(reason));
   }
   return success;
 }
@@ -78,7 +80,9 @@ export async function uploadVideos(files, date, userId) {
   const success = settled.filter((item) => item.status === 'fulfilled').map((item) => item.value);
   if (success.length === 0) {
     const firstError = settled.find((item) => item.status === 'rejected');
-    throw new Error(getErrorMessage(firstError?.reason, 'Videolar yüklenemedi.'));
+    const reason = firstError?.reason;
+    console.error('[STORAGE_UPLOAD]', reason?.code, getErrorMessage(reason));
+    throw new Error(storageUserMessage(reason));
   }
   return success;
 }

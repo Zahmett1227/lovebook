@@ -23,14 +23,14 @@ export default function YearPage({
         <div className="px-4 sm:px-6 pt-3">
           <div
             role="alert"
-            className="rounded-2xl border border-[#e7b8b0] bg-[#fff0ed] px-3 py-2.5 text-xs sm:text-sm text-[#6b3a38] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+            className="rounded-2xl border border-lb-danger/40 bg-lb-danger/10 px-3 py-2.5 text-xs sm:text-sm text-lb-text flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
           >
             <span>{calendarLoadError}</span>
             {onRetryCalendar && (
               <button
                 type="button"
                 onClick={onRetryCalendar}
-                className="shrink-0 rounded-xl border border-[#ddbcb3] bg-white px-3 py-1.5 text-xs font-medium text-[#6f4548] active:scale-[0.98]"
+                className="shrink-0 rounded-xl border border-lb-border bg-lb-elevated px-3 py-1.5 text-xs font-medium text-lb-accent active:scale-[0.98]"
               >
                 Tekrar dene
               </button>
@@ -39,17 +39,17 @@ export default function YearPage({
         </div>
       )}
       <div className="px-4 sm:px-6 pt-4 pb-2">
-        <div className="rounded-[1.8rem] border border-[#ead4ce] bg-gradient-to-br from-[#fff9f8] via-[#fbeee8] to-[#f8e7df] px-4 py-5 shadow-editorial relative overflow-hidden">
-          <div className="absolute -top-10 -right-6 w-24 h-24 rounded-full bg-[#efc1c7]/35 blur-2xl" />
-          <div className="absolute -bottom-12 -left-10 w-28 h-28 rounded-full bg-[#e8c7a9]/30 blur-2xl" />
-          <p className="font-hero-sub text-[10px] uppercase tracking-[0.28em] text-[#a0726c] relative text-center">
-            Bizim Günlüğümüz
+        <div className="rounded-[1.8rem] border border-lb-border bg-gradient-to-b from-lb-elevated via-lb-surface to-lb-canvas px-4 py-6 sm:py-8 shadow-editorial relative overflow-hidden ring-1 ring-lb-accent/10">
+          <div className="absolute -top-16 -right-10 w-40 h-40 rounded-full bg-lb-accent/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-12 w-44 h-44 rounded-full bg-lb-accent2/10 blur-3xl pointer-events-none" />
+          <p className="font-hero-sub text-[10px] uppercase tracking-[0.32em] text-lb-accent relative text-center">
+            Bizim günlüğümüz
           </p>
-          <h2 className="font-hero-title text-[2.15rem] sm:text-[2.45rem] font-semibold text-[#5a3738] leading-none mt-2 text-center">
+          <h2 className="font-hero-title text-[2.2rem] sm:text-[2.75rem] font-semibold text-lb-text leading-none mt-3 text-center">
             {year}
           </h2>
-          <p className="font-hero-sub text-sm sm:text-[15px] text-[#8f5f5f] mt-2 relative text-center">
-            Yeni bir sayfa, yeni bir hatıra.
+          <p className="font-hero-sub text-sm sm:text-[15px] text-lb-subtext mt-3 relative text-center max-w-md mx-auto">
+            Her kare bir hatıra — takvim senin storyboard’un.
           </p>
         </div>
       </div>
@@ -72,78 +72,35 @@ export default function YearPage({
         </div>
       </div>
 
-      {/* ── Mobile / tablet: single column ── */}
       <div className="lg:hidden px-4 pb-6 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[...LEFT_MONTHS, ...RIGHT_MONTHS].map((month) => (
           <MonthCalendar key={month} month={month} {...calendarProps} />
         ))}
       </div>
 
-      {/* ── Desktop: open-book two-page layout ── */}
       <div className="hidden lg:flex pb-6 pt-4">
-
-        {/* Left page — Jan–Jun */}
         <div
-          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-l-[1.6rem] border border-[#ead8d1]"
-          style={{
-            background:
-              'linear-gradient(to bottom, #fff9f8 0%, #f8ebe3 100%)',
-          }}
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-l-[1.5rem] border border-lb-border bg-lb-canvas/80"
         >
-          {/* Subtle horizontal line rules (page texture) */}
           <PageLines />
           {LEFT_MONTHS.map((month) => (
             <MonthCalendar key={month} month={month} {...calendarProps} />
           ))}
-
-          {/* Page number */}
-          <div className="absolute bottom-2 left-6 text-[10px] text-[#b3877f] font-display italic select-none">
+          <div className="absolute bottom-2 left-6 text-[10px] text-lb-subtext font-display italic select-none">
             {year}
           </div>
         </div>
 
-        {/* Spine */}
-        <div className="relative w-10 flex-shrink-0">
-          {/* Centre crease */}
-          <div
-            className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px"
-            style={{ background: '#c79e95', opacity: 0.5 }}
-          />
-          {/* Gradient shadow left of spine */}
-          <div
-            className="absolute inset-y-0 right-1/2"
-            style={{
-              width: 20,
-              background:
-                'linear-gradient(to left, rgba(72,32,32,0.09), transparent)',
-            }}
-          />
-          {/* Gradient shadow right of spine */}
-          <div
-            className="absolute inset-y-0 left-1/2"
-            style={{
-              width: 20,
-              background:
-                'linear-gradient(to right, rgba(72,32,32,0.09), transparent)',
-            }}
-          />
-        </div>
+        <div className="relative w-10 flex-shrink-0 book-spine border-y border-lb-border" />
 
-        {/* Right page — Jul–Dec */}
         <div
-          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-r-[1.6rem] border border-[#ead8d1]"
-          style={{
-            background:
-              'linear-gradient(to bottom, #fff9f8 0%, #f8ebe3 100%)',
-          }}
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-r-[1.5rem] border border-lb-border bg-lb-canvas/80"
         >
           <PageLines />
           {RIGHT_MONTHS.map((month) => (
             <MonthCalendar key={month} month={month} {...calendarProps} />
           ))}
-
-          {/* Page number */}
-          <div className="absolute bottom-2 right-6 text-[10px] text-[#b3877f] font-display italic select-none">
+          <div className="absolute bottom-2 right-6 text-[10px] text-lb-subtext font-display italic select-none">
             {year}
           </div>
         </div>
@@ -155,11 +112,12 @@ export default function YearPage({
 function FilterChip({ active, onClick, label }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`font-hero-sub text-xs whitespace-nowrap rounded-full border px-3.5 min-h-[36px] transition active:scale-[0.98] ${
+      className={`font-hero-sub text-xs whitespace-nowrap rounded-full border px-3.5 min-h-[38px] transition active:scale-[0.98] ${
         active
-          ? 'bg-[#8f5f5f] border-[#8f5f5f] text-white shadow-sm'
-          : 'bg-[#fffaf8] border-[#e7d3cb] text-[#7a4f4f] hover:bg-[#f8ece7]'
+          ? 'bg-lb-accent border-lb-accent text-lb-page shadow-glow'
+          : 'bg-lb-elevated border-lb-border text-lb-subtext hover:text-lb-text hover:border-lb-accent/35'
       }`}
     >
       {label}
@@ -167,14 +125,13 @@ function FilterChip({ active, onClick, label }) {
   );
 }
 
-/* Subtle ruled-paper lines behind each page */
 function PageLines() {
   return (
     <div
-      className="absolute inset-0 pointer-events-none"
+      className="absolute inset-0 pointer-events-none opacity-[0.35]"
       style={{
         backgroundImage:
-          'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(152,102,96,0.10) 32px)',
+          'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(157,148,168,0.12) 32px)',
         backgroundSize: '100% 32px',
       }}
     />

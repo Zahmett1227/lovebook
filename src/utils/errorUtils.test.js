@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getErrorMessage, firestoreUserMessage } from './errorUtils';
+import { getErrorMessage, firestoreUserMessage, storageUserMessage } from './errorUtils';
 
 describe('getErrorMessage', () => {
   it('reads Error.message', () => {
@@ -34,5 +34,16 @@ describe('firestoreUserMessage', () => {
   it('uses generic for unknown', () => {
     const msg = firestoreUserMessage(new Error('Something weird'));
     expect(msg).toMatch(/yüklenemedi|yenile/i);
+  });
+});
+
+describe('storageUserMessage', () => {
+  it('maps unauthorized', () => {
+    const err = { code: 'storage/unauthorized', message: 'nope' };
+    expect(storageUserMessage(err)).toMatch(/Depolama izni|Storage/i);
+  });
+
+  it('maps unauthenticated', () => {
+    expect(storageUserMessage({ code: 'storage/unauthenticated' })).toMatch(/Oturum/i);
   });
 });

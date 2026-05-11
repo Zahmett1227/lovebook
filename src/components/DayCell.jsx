@@ -2,13 +2,13 @@ import { isToday } from '../utils/dateUtils';
 import { memo } from 'react';
 
 const WEEKDAY_TONES = [
-  'bg-[#fffaf8]',
-  'bg-[#fff7f4]',
-  'bg-[#fff9f6]',
-  'bg-[#fff8f5]',
-  'bg-[#fffbf8]',
-  'bg-[#fff6f2]',
-  'bg-[#fff8f6]',
+  'bg-lb-elevated/70',
+  'bg-lb-elevated/55',
+  'bg-lb-elevated/80',
+  'bg-lb-elevated/60',
+  'bg-lb-elevated/75',
+  'bg-lb-elevated/50',
+  'bg-lb-elevated/65',
 ];
 
 function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], weekdaySlot = 0 }) {
@@ -21,15 +21,17 @@ function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], w
 
   return (
     <button
+      type="button"
       onClick={() => onClick(dateKey)}
       className={`
         day-cell h-11 min-h-[44px] rounded-[0.95rem] border text-sm font-medium relative flex flex-col items-center justify-center gap-0.5
-        transition-all duration-150 select-none active:scale-[0.98] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]
+        transition-all duration-150 select-none active:scale-[0.98]
+        shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]
         ${isSelected
-          ? 'bg-[#8f5f5f] border-[#8f5f5f] text-white shadow-md ring-2 ring-[#e7c9c1]'
+          ? 'bg-lb-accent border-lb-accent text-lb-page shadow-glow ring-2 ring-lb-accent/35'
           : today
-          ? 'bg-[#fcece6] border-[#ce9a8f] text-[#8f5f5f] font-semibold ring-1 ring-[#d8a89c]'
-          : `${toneClass} border-[#ead8d1] text-[#6b4848] hover:bg-[#f9ede8] hover:border-[#cfaaa1]`
+          ? 'bg-lb-accent/12 border-lb-accent/50 text-lb-accent font-semibold ring-1 ring-lb-accent/25'
+          : `${toneClass} border-lb-border text-lb-text hover:border-lb-accent/35 hover:bg-lb-muted/60`
         }
       `}
     >
@@ -41,10 +43,10 @@ function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], w
           ))}
         </div>
       ) : hasContent && !isSelected && (
-        <span className="w-1.5 h-1.5 rounded-full bg-[#8f5f5f] opacity-80" />
+        <span className="w-1.5 h-1.5 rounded-full bg-lb-accent opacity-90 shadow-[0_0_6px_rgba(227,176,92,0.7)]" />
       )}
       {emojis.length === 0 && hasContent && isSelected && (
-        <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
+        <span className="w-1.5 h-1.5 rounded-full bg-lb-page opacity-90" />
       )}
     </button>
   );
