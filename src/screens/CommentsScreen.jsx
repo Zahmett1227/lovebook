@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useComments } from '../hooks/useComments';
-import { USER_PROFILES } from '../config/appConfig';
+import { ALLOWED_USERS, USER_PROFILES, generateCoupleId } from '../config/appConfig';
+import { useCoupleProfile } from '../hooks/useCoupleProfile';
 import { uploadImages } from '../services/storageService';
 import { normalizeDateKey } from '../utils/dateUtils';
 
@@ -18,10 +19,46 @@ function isLeftUser(email) {
   return USER_PROFILES[email]?.side === 'left';
 }
 
+function getAvatarUrl(userEmail, profile, leftEmail, rightEmail) {
+  if (userEmail === leftEmail) return profile?.leftUserPhotoUrl ?? null;
+  if (userEmail === rightEmail) return profile?.rightUserPhotoUrl ?? null;
+  return null;
+}
+
+function AvatarRing({ userEmail, displayName, profile, leftEmail, rightEmail, sizeClass = 'w-8 h-8', textClass = 'text-xs' }) {
+  const url = getAvatarUrl(userEmail, profile, leftEmail, rightEmail);
+  const left = isLeftUser(userEmail);
+  const initial = displayName?.[0] ?? '?';
+  return (
+    <div
+      className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0 ring-1 ${
+        left ? 'ring-lb-accent/40' : 'ring-lb-accent2/40'
+      }`}
+    >
+      {url ? (
+        <img src={url} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <div
+          className={`w-full h-full flex items-center justify-center font-bold ${textClass} ${
+            left ? 'bg-lb-accent text-lb-page' : 'bg-lb-accent2 text-white'
+          }`}
+        >
+          {initial}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CommentsScreen({ entry, onClose, onCommentsUpdated }) {
   const { user } = useAuth();
   const entryId = entry?.id ?? null;
   const { comments, loading, addComment, deleteComment } = useComments(entryId);
+
+  const coupleId = useMemo(() => generateCoupleId(ALLOWED_USERS[0], ALLOWED_USERS[1]), []);
+  const { profile } = useCoupleProfile(coupleId);
+  const leftEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'left'), []);
+  const rightEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'right'), []);
 
   const [commentText, setCommentText] = useState('');
   const [commentImage, setCommentImage] = useState(null);
@@ -84,8 +121,6 @@ export default function CommentsScreen({ entry, onClose, onCommentsUpdated }) {
 
   if (!entry) return null;
 
-  const authorLeft = isLeftUser(entry.userEmail);
-
   return (
     <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-sm flex flex-col justify-end touch-scroll-overlay">
       <button
@@ -117,13 +152,13 @@ export default function CommentsScreen({ entry, onClose, onCommentsUpdated }) {
         </div>
 
         <div className="px-5 py-3 border-b border-lb-border/50 bg-lb-canvas/60 flex gap-3 items-start shrink-0">
-          <div
-            className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
-              authorLeft ? 'bg-lb-accent text-lb-page' : 'bg-lb-accent2 text-white'
-            }`}
-          >
-            {entry.userDisplayName?.[0] ?? '?'}
-          </div>
+          <AvatarRing
+            userEmail={entry.userEmail}
+            displayName={entry.userDisplayName}
+            profile={profile}
+            leftEmail={leftEmail}
+            rightEmail={rightEmail}
+          />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-lb-text">{entry.userDisplayName}</p>
             <p className="text-xs text-lb-subtext line-clamp-2 mt-0.5">{entry.text || entry.title || '—'}</p>
@@ -135,13 +170,13 @@ export default function CommentsScreen({ entry, onClose, onCommentsUpdated }) {
           {!loading &&
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3 items-start">
-                <div
-                  className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
-                    isLeftUser(comment.userEmail) ? 'bg-lb-accent text-lb-page' : 'bg-lb-accent2 text-white'
-                  }`}
-                >
-                  {comment.userDisplayName?.[0] ?? '?'}
-                </div>
+                <AvatarRing
+                  userEmail={comment.userEmail}
+                  displayName={comment.userDisplayName}
+                  profile={profile}
+                  leftEmail={leftEmail}
+                  rightEmail={rightEmail}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-xs font-semibold text-lb-text">{comment.userDisplayName}</span>

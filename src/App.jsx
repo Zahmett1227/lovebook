@@ -470,6 +470,7 @@ function AppContent() {
 
       {viewMode === 'launch' && (
         <LaunchMenu
+          entries={yearEntries}
           onAddToday={goToTodayComposer}
           onAddDifferentDate={goToCalendarMode}
           onReviewByDate={goToReviewDateMode}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMORY_TAGS } from '../config/memoryTags';
-import { USER_PROFILES } from '../config/appConfig';
+import { ALLOWED_USERS, USER_PROFILES, generateCoupleId } from '../config/appConfig';
+import { useCoupleProfile } from '../hooks/useCoupleProfile';
 import { getMemoryTagById, normalizeMemoryTagId } from '../config/memoryTags';
 import { formatDateDisplay } from '../utils/dateUtils';
 import { normalizeImageUrls, normalizeVideoItems, resolveImageUrl } from '../utils/imageUtils';
@@ -18,6 +19,17 @@ export default function MemoryFeedScreen({
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
+
+  const coupleId = useMemo(() => generateCoupleId(ALLOWED_USERS[0], ALLOWED_USERS[1]), []);
+  const { profile } = useCoupleProfile(coupleId);
+  const leftEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'left'), []);
+  const rightEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'right'), []);
+
+  function getAvatarUrl(userEmail) {
+    if (userEmail === leftEmail) return profile?.leftUserPhotoUrl ?? null;
+    if (userEmail === rightEmail) return profile?.rightUserPhotoUrl ?? null;
+    return null;
+  }
 
   const displayedEntries = useMemo(() => {
     let list = [...(Array.isArray(allEntries) ? allEntries : [])];
@@ -81,6 +93,7 @@ export default function MemoryFeedScreen({
               onToggleFavorite={onToggleFavorite}
               onDeleteEntry={onDeleteEntry}
               onEditEntry={onEditEntry}
+              avatarUrl={getAvatarUrl(entry.userEmail)}
             />
           ))
         )}
@@ -114,6 +127,7 @@ function FeedPost({
   onToggleFavorite,
   onDeleteEntry,
   onEditEntry,
+  avatarUrl = null,
 }) {
   const tagMeta = getMemoryTagById(normalizeMemoryTagId(entry.tag || entry.mood || null));
   const imageUrls = normalizeImageUrls(entry.imageUrls);
@@ -138,13 +152,25 @@ function FeedPost({
     <article className="border-b border-lb-border/60 pb-1 mb-1">
       <div className="flex items-center gap-3 px-4 py-3">
         <div
-          className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2 shrink-0 ${
-            isLeftUser
-              ? 'bg-lb-accent text-lb-page ring-lb-accent/40'
-              : 'bg-lb-accent2 text-white ring-lb-accent2/40'
+          className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-2 ${
+            isLeftUser ? 'ring-lb-accent/40' : 'ring-lb-accent2/40'
           }`}
         >
-          {initial}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div
+              className={`w-full h-full flex items-center justify-center text-sm font-bold ${
+                isLeftUser ? 'bg-lb-accent text-lb-page' : 'bg-lb-accent2 text-white'
+              }`}
+            >
+              {initial}
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-lb-text truncate">{displayName}</p>

@@ -1,7 +1,14 @@
-import { useState, useMemo } from 'react';
-import { INITIAL_YEAR, RELATIONSHIP_START_DATE } from '../config/appConfig';
+import { useMemo, useState } from 'react';
+import {
+  ALLOWED_USERS,
+  INITIAL_YEAR,
+  RELATIONSHIP_START_DATE,
+  USER_PROFILES,
+  generateCoupleId,
+} from '../config/appConfig';
 import { MEMORY_TAGS } from '../config/memoryTags';
 import { daysTogetherCount } from '../utils/dateUtils';
+import { useCoupleProfile } from '../hooks/useCoupleProfile';
 
 export default function LaunchMenu({
   onAddToday,
@@ -10,13 +17,26 @@ export default function LaunchMenu({
   onReviewByMood,
   onRandomMemory,
   randomLoading = false,
+  entries = [],
 }) {
   const [showReviewOptions, setShowReviewOptions] = useState(false);
 
-  const dayCount = useMemo(
-    () => daysTogetherCount(RELATIONSHIP_START_DATE),
-    []
-  );
+  const coupleId = useMemo(() => generateCoupleId(ALLOWED_USERS[0], ALLOWED_USERS[1]), []);
+  const { profile } = useCoupleProfile(coupleId);
+
+  const leftEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'left'), []);
+  const rightEmail = useMemo(() => ALLOWED_USERS.find((e) => USER_PROFILES[e]?.side === 'right'), []);
+  const leftProfile = USER_PROFILES[leftEmail];
+  const rightProfile = USER_PROFILES[rightEmail];
+
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const leftCount = safeEntries.filter((e) => e.userEmail === leftEmail).length;
+  const rightCount = safeEntries.filter((e) => e.userEmail === rightEmail).length;
+  const total = safeEntries.length || 1;
+  const leftPct = Math.round((leftCount / total) * 100);
+  const rightPct = Math.round((rightCount / total) * 100);
+
+  const dayCount = useMemo(() => daysTogetherCount(RELATIONSHIP_START_DATE), []);
   const streakFillPercent = Math.min(100, (dayCount / 365) * 100);
 
   return (
@@ -69,7 +89,76 @@ export default function LaunchMenu({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-lb-accent/20 bg-lb-accent/[0.08] p-4 flex items-center gap-4 mb-4">
+      <div className="rounded-[1.25rem] border border-lb-border bg-gradient-to-br from-lb-elevated to-lb-surface p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] mb-4 max-w-2xl mx-auto">
+        <p className="font-hero-sub text-[10px] uppercase tracking-[0.2em] text-lb-subtext mb-4">
+          Bu yılki katkılar
+        </p>
+
+        {[
+          {
+            prof: leftProfile,
+            photoUrl: profile?.leftUserPhotoUrl,
+            count: leftCount,
+            pct: leftPct,
+            side: 'left',
+          },
+          {
+            prof: rightProfile,
+            photoUrl: profile?.rightUserPhotoUrl,
+            count: rightCount,
+            pct: rightPct,
+            side: 'right',
+          },
+        ].map(({ prof, photoUrl, count, pct, side }) => (
+          <div key={side} className="mb-3 last:mb-0">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ${
+                    side === 'left' ? 'ring-lb-accent/40' : 'ring-lb-accent2/40'
+                  }`}
+                >
+                  {photoUrl ? (
+                    <img src={photoUrl} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <div
+                      className={`w-full h-full flex items-center justify-center text-[10px] font-bold ${
+                        side === 'left' ? 'bg-lb-accent text-lb-page' : 'bg-lb-accent2 text-white'
+                      }`}
+                    >
+                      {prof?.displayName?.[0]}
+                    </div>
+                  )}
+                </div>
+                <span className="font-hero-sub text-xs text-lb-text">{prof?.displayName}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-display text-sm text-lb-accent">{count}</span>
+                <span className="font-hero-sub text-[10px] text-lb-subtext">anı</span>
+                <span className="font-hero-sub text-[10px] text-lb-subtext/50 ml-1">%{pct}</span>
+              </div>
+            </div>
+
+            <div className="h-1.5 rounded-full bg-lb-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${
+                  side === 'left'
+                    ? 'bg-gradient-to-r from-lb-accent to-amber-300'
+                    : 'bg-gradient-to-r from-lb-accent2 to-pink-400'
+                }`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        ))}
+
+        <div className="mt-4 pt-3 border-t border-lb-border/60 flex items-center justify-between">
+          <span className="font-hero-sub text-[10px] text-lb-subtext">Toplam bu yıl</span>
+          <span className="font-display text-base text-lb-text">{safeEntries.length} anı</span>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-lb-accent/20 bg-lb-accent/[0.08] p-4 flex items-center gap-4 mb-4 max-w-2xl mx-auto">
         <span className="text-3xl shrink-0" aria-hidden>
           🔥
         </span>
@@ -88,47 +177,124 @@ export default function LaunchMenu({
       </div>
 
       <div className="space-y-3 max-w-2xl mx-auto">
-        <button
-          type="button"
-          onClick={onAddToday}
-          className="w-full lb-btn-primary min-h-[56px] text-lg italic font-display active:scale-[0.98]"
-        >
+        <MenuButton onClick={onAddToday} emphasis icon="✦" sublabel="Bugünün anısını ekle">
           Bugüne anı ekle
-        </button>
+        </MenuButton>
 
-        <button
-          type="button"
-          onClick={onAddDifferentDate}
-          className="w-full lb-btn-ghost font-hero-sub text-sm sm:text-base active:scale-[0.98]"
-        >
+        <MenuButton onClick={onAddDifferentDate} icon="🗓" sublabel="Geçmiş bir güne git">
           Farklı bir güne anı ekle
-        </button>
+        </MenuButton>
 
-        <button
-          type="button"
-          onClick={() => setShowReviewOptions((prev) => !prev)}
+        <MenuButton
+          onClick={() => setShowReviewOptions((p) => !p)}
+          icon="📖"
+          sublabel="Tüm anılarını incele"
           aria-expanded={showReviewOptions}
-          className="w-full lb-btn-ghost font-hero-sub text-sm sm:text-base flex items-center justify-between active:scale-[0.98]"
         >
-          <span>Anıları incele</span>
-          <span className="text-lb-subtext text-xs font-normal">{showReviewOptions ? '▲' : '▼'}</span>
-        </button>
+          Anıları incele
+          <span className="ml-2 text-lb-subtext text-xs font-normal">
+            {showReviewOptions ? '▲' : '▼'}
+          </span>
+        </MenuButton>
 
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${
-            showReviewOptions ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'
+            showReviewOptions ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="rounded-2xl border border-lb-border bg-lb-canvas/90 p-3 space-y-2 shadow-inner">
-            <p className="text-[10px] uppercase tracking-widest text-lb-subtext px-1 font-hero-sub">
-              İnceleme modu
-            </p>
-            <SubMenuButton onClick={onReviewByDate}>Tarihe göre</SubMenuButton>
-            <SubMenuButton onClick={onReviewByMood}>Mooda göre</SubMenuButton>
+          <div className="rounded-2xl border border-lb-border bg-lb-canvas/60 p-2.5 space-y-2">
+            <SubMenuButton onClick={onReviewByDate} icon="📅">
+              Tarihe göre
+            </SubMenuButton>
+            <SubMenuButton onClick={onReviewByMood} icon="🎯">
+              Mooda göre
+            </SubMenuButton>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function MenuButton({
+  onClick,
+  children,
+  emphasis = false,
+  icon,
+  sublabel,
+  'aria-expanded': ariaExpanded,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={ariaExpanded}
+      className={`
+        w-full rounded-[1.25rem] px-5 py-4 min-h-[64px]
+        flex items-center gap-4
+        border transition active:scale-[0.98] text-left
+        relative overflow-hidden
+        ${
+          emphasis
+            ? `bg-gradient-to-r from-lb-accent to-amber-400
+               border-lb-accent/50 text-lb-page
+               shadow-[0_8px_32px_rgba(227,176,92,0.35)]`
+            : `bg-gradient-to-br from-lb-elevated to-lb-surface
+               border-lb-border text-lb-text
+               hover:border-lb-accent/35
+               shadow-[0_4px_16px_rgba(0,0,0,0.25)]`
+        }
+      `}
+    >
+      {icon && (
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+            emphasis ? 'bg-lb-page/20' : 'bg-lb-muted/60 border border-lb-border'
+          }`}
+        >
+          {icon}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div
+          className={`font-display text-[15px] font-semibold leading-tight ${
+            emphasis ? 'text-lb-page' : 'text-lb-text'
+          }`}
+        >
+          {children}
+        </div>
+        {sublabel && (
+          <p
+            className={`font-hero-sub text-[11px] mt-0.5 ${
+              emphasis ? 'text-lb-page/60' : 'text-lb-subtext'
+            }`}
+          >
+            {sublabel}
+          </p>
+        )}
+      </div>
+
+      <span className={`text-lg flex-shrink-0 ${emphasis ? 'text-lb-page/70' : 'text-lb-accent'}`}>→</span>
+
+      {emphasis && (
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
+      )}
+    </button>
+  );
+}
+
+function SubMenuButton({ onClick, children, icon }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-[1rem] border border-lb-border bg-lb-canvas/80 text-lb-text px-4 py-3.5 min-h-[52px] flex items-center gap-3 hover:border-lb-accent/35 hover:bg-lb-elevated/60 active:scale-[0.98] transition text-left shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+    >
+      {icon && <span className="text-base w-7 text-center flex-shrink-0">{icon}</span>}
+      <span className="font-hero-sub text-sm">{children}</span>
+      <span className="ml-auto text-lb-accent text-sm">›</span>
+    </button>
   );
 }
 
@@ -138,17 +304,5 @@ function StatChip({ value, label }) {
       <div className="font-hero-title text-xl text-lb-accent leading-none">{value}</div>
       <div className="font-hero-sub text-[10px] text-lb-subtext uppercase tracking-wide mt-1">{label}</div>
     </div>
-  );
-}
-
-function SubMenuButton({ onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full rounded-xl border border-lb-border bg-lb-elevated text-lb-text text-sm px-4 py-3 min-h-[48px] transition text-left hover:border-lb-accent/35 hover:bg-lb-muted/40 active:scale-[0.99] font-hero-sub"
-    >
-      {children}
-    </button>
   );
 }
