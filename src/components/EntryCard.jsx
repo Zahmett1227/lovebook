@@ -93,6 +93,8 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
               <img
                 src={img}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </button>
@@ -107,7 +109,7 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
               <video
                 src={video.url}
                 controls
-                preload="metadata"
+                preload="none"
                 className="w-full max-h-64 object-cover"
               />
             </div>

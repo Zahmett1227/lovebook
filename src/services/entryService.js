@@ -8,6 +8,9 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  orderBy,
+  limit,
+  startAfter,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { normalizeDateKey } from '../utils/dateUtils';
@@ -73,6 +76,23 @@ export async function getAllEntries() {
   const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
   console.log('[FIRESTORE_READ] getAllEntries →', docs.length, 'entries');
   return sortByCreatedAt(docs);
+}
+
+export async function getLatestEntries(limitN = 50) {
+  const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'), limit(limitN));
+  const snap = await getDocs(q);
+  const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
+  return docs;
+}
+
+export async function getEntriesPage({ cursor = null, pageSize = 30 } = {}) {
+  const constraints = [orderBy('createdAt', 'desc'), limit(pageSize)];
+  if (cursor) constraints.push(startAfter(cursor));
+  const q = query(collection(db, COLLECTION), ...constraints);
+  const snap = await getDocs(q);
+  const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
+  const nextCursor = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null;
+  return { docs, cursor: nextCursor, hasMore: snap.docs.length === pageSize };
 }
 
 export async function addEntry(entry) {

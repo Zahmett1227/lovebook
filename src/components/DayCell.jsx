@@ -1,4 +1,5 @@
 import { isToday } from '../utils/dateUtils';
+import { memo } from 'react';
 
 const WEEKDAY_TONES = [
   'bg-[#fffaf8]',
@@ -10,7 +11,7 @@ const WEEKDAY_TONES = [
   'bg-[#fff8f6]',
 ];
 
-export default function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], weekdaySlot = 0 }) {
+function DayCell({ dateKey, day, hasContent, isSelected, onClick, emojis = [], weekdaySlot = 0 }) {
   if (!dateKey) {
     return <div className="aspect-square" />;
   }
@@ -48,3 +49,5 @@ export default function DayCell({ dateKey, day, hasContent, isSelected, onClick,
     </button>
   );
 }
+
+export default memo(DayCell);

@@ -4,9 +4,10 @@ import { getMemoryTagById, normalizeMemoryTagId } from './config/memoryTags';
 import { normalizeDateKey, todayKey } from './utils/dateUtils';
 import { normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
 import { bytesToMb } from './utils/costUtils';
+import { getErrorMessage } from './utils/errorUtils';
 import { useSelectedDate } from './hooks/useSelectedDate';
 import { useYearEntries, useDayEntries } from './hooks/useEntries';
-import { getAllEntries } from './services/entryService';
+import { getEntriesPage, getLatestEntries } from './services/entryService';
 import ProtectedRoute from './components/ProtectedRoute';
 import BookLayout from './components/BookLayout';
 import YearNavigation from './components/YearNavigation';
@@ -28,8 +29,13 @@ function AppContent() {
   const [year, setYear]       = useState(INITIAL_YEAR);
   const [pageAnim, setPageAnim] = useState(null); // null | 'exit-forward' | 'exit-back' | 'enter-forward' | 'enter-back'
   const [activeTagFilter, setActiveTagFilter] = useState('all');
-  const [allEntries, setAllEntries] = useState([]);
-  const [allEntriesLoading, setAllEntriesLoading] = useState(false);
+  const [recentEntries, setRecentEntries] = useState([]);
+  const [recentEntriesLoading, setRecentEntriesLoading] = useState(false);
+  const [reviewEntries, setReviewEntries] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewLoadingMore, setReviewLoadingMore] = useState(false);
+  const [reviewCursor, setReviewCursor] = useState(null);
+  const [reviewHasMore, setReviewHasMore] = useState(true);
   const [randomStatus, setRandomStatus] = useState('');
   const [randomLoading, setRandomLoading] = useState(false);
   const [sessionCostPreview, setSessionCostPreview] = useState({
@@ -45,12 +51,16 @@ function AppContent() {
   const { entries: yearEntries, datesWithContent, refresh: refreshYear } = useYearEntries(year);
   const { entries: dayEntries, loading: dayLoading, refresh: refreshDay } = useDayEntries(selectedDate);
 
-  const entriesByDate = yearEntries.reduce((acc, entry) => {
-    if (!entry?.date) return acc;
-    if (!acc[entry.date]) acc[entry.date] = [];
-    acc[entry.date].push(entry);
-    return acc;
-  }, {});
+  const entriesByDate = useMemo(
+    () =>
+      yearEntries.reduce((acc, entry) => {
+        if (!entry?.date) return acc;
+        if (!acc[entry.date]) acc[entry.date] = [];
+        acc[entry.date].push(entry);
+        return acc;
+      }, {}),
+    [yearEntries]
+  );
 
   const filteredEntriesByDate = useMemo(() => {
     if (activeTagFilter === 'all') return entriesByDate;
@@ -70,10 +80,10 @@ function AppContent() {
 
   const latestEntries = useMemo(
     () =>
-      [...allEntries]
+      [...recentEntries]
         .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
         .slice(0, 5),
-    [allEntries]
+    [recentEntries]
   );
 
   const isAnimating = pageAnim !== null;
@@ -113,24 +123,51 @@ function AppContent() {
   function handleRefresh() {
     refreshYear();
     refreshDay();
-    refreshAllEntries();
+    refreshRecentEntries();
   }
 
-  const refreshAllEntries = useCallback(async () => {
-    setAllEntriesLoading(true);
+  const refreshRecentEntries = useCallback(async () => {
+    setRecentEntriesLoading(true);
     try {
-      const docs = await getAllEntries();
-      setAllEntries(docs);
+      const docs = await getLatestEntries(120);
+      setRecentEntries(docs);
     } catch (err) {
-      console.error('[FIRESTORE_READ_ERROR] getAllEntries:', err.message);
+      console.error('[FIRESTORE_READ_ERROR] getLatestEntries:', getErrorMessage(err));
     } finally {
-      setAllEntriesLoading(false);
+      setRecentEntriesLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshAllEntries();
-  }, [refreshAllEntries]);
+    refreshRecentEntries();
+  }, [refreshRecentEntries]);
+
+  const loadReviewEntries = useCallback(async ({ reset = false } = {}) => {
+    if (reset) {
+      setReviewLoading(true);
+    } else {
+      setReviewLoadingMore(true);
+    }
+    try {
+      const { docs, cursor, hasMore } = await getEntriesPage({
+        cursor: reset ? null : reviewCursor,
+        pageSize: 30,
+      });
+      setReviewEntries((prev) => (reset ? docs : [...prev, ...docs]));
+      setReviewCursor(cursor);
+      setReviewHasMore(hasMore);
+    } catch (err) {
+      console.error('[FIRESTORE_READ_ERROR] getEntriesPage:', getErrorMessage(err));
+    } finally {
+      setReviewLoading(false);
+      setReviewLoadingMore(false);
+    }
+  }, [reviewCursor]);
+
+  useEffect(() => {
+    if (viewMode !== 'review-mood') return;
+    loadReviewEntries({ reset: true });
+  }, [viewMode, loadReviewEntries]);
 
   useEffect(() => {
     function readSessionCost() {
@@ -163,7 +200,7 @@ function AppContent() {
   async function openRandomMemory() {
     setRandomLoading(true);
     try {
-      const docs = allEntries.length > 0 ? allEntries : await getAllEntries();
+      const docs = recentEntries.length > 0 ? recentEntries : await getLatestEntries(120);
       if (!docs.length) {
         setRandomStatus('Henüz hiç anı yok. İlk anıyı ekleyerek başlayalım.');
         return;
@@ -180,7 +217,7 @@ function AppContent() {
       }
       selectDate(randomDate);
     } catch (err) {
-      console.error('[RANDOM_MEMORY_ERROR]', err.message);
+      console.error('[RANDOM_MEMORY_ERROR]', getErrorMessage(err));
       setRandomStatus('Rastgele anı açılamadı. Lütfen tekrar dene.');
     } finally {
       setRandomLoading(false);
@@ -291,7 +328,7 @@ function AppContent() {
                 </p>
               </div>
               <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Son Anılar</h3>
-              {allEntriesLoading ? (
+              {recentEntriesLoading ? (
                 <p className="text-xs text-[#6b9c86]">Yükleniyor…</p>
               ) : latestEntries.length === 0 ? (
                 <p className="text-xs text-[#6b9c86]">Henüz anı eklenmedi.</p>
@@ -360,8 +397,11 @@ function AppContent() {
 
       {viewMode === 'review-mood' && (
         <MoodReviewPanel
-          entries={allEntries}
-          loading={allEntriesLoading}
+          entries={reviewEntries}
+          loading={reviewLoading}
+          loadingMore={reviewLoadingMore}
+          hasMore={reviewHasMore}
+          onLoadMore={() => loadReviewEntries({ reset: false })}
           activeTagFilter={activeTagFilter}
           onTagFilterChange={setActiveTagFilter}
           onOpenDate={(dateKey) => {

@@ -4,6 +4,9 @@ import { MEMORY_TAGS, getMemoryTagById, normalizeMemoryTagId } from '../config/m
 export default function MoodReviewPanel({
   entries,
   loading,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore,
   activeTagFilter,
   onTagFilterChange,
   onOpenDate,
@@ -65,6 +68,15 @@ export default function MoodReviewPanel({
                 </button>
               );
             })
+          )}
+          {!loading && filtered.length > 0 && hasMore && (
+            <button
+              onClick={onLoadMore}
+              disabled={loadingMore}
+              className="w-full rounded-xl border border-[#e7d3cb] bg-[#fffaf8] hover:bg-[#f8ece7] text-[#7a4f4f] text-sm py-2.5 transition disabled:opacity-60"
+            >
+              {loadingMore ? 'Yükleniyor…' : 'Daha fazla göster'}
+            </button>
           )}
         </div>
       </div>

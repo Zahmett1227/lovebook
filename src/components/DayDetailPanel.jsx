@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatDateDisplay, normalizeDateKey } from '../utils/dateUtils';
 import { addEntry, updateEntry, deleteEntry } from '../services/entryService';
 import { useAuth } from '../hooks/useAuth';
 import { USER_PROFILES, ALLOWED_USERS } from '../config/appConfig';
 import { normalizeMemoryTagId } from '../config/memoryTags';
+import { getErrorMessage } from '../utils/errorUtils';
 import EntryCard from './EntryCard';
 import EntryForm from './EntryForm';
 import EmptyState from './EmptyState';
@@ -23,6 +24,8 @@ export default function DayDetailPanel({
   const [editingEntry, setEditingEntry] = useState(null);
   const [saveError, setSaveError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const saveLockRef = useRef(false);
 
   const safeDateKey = normalizeDateKey(dateKey);
   const formId = `entry-form-${(safeDateKey || dateKey || 'memory').replace(/[^a-zA-Z0-9_-]/g, '-')}`;
@@ -55,13 +58,20 @@ export default function DayDetailPanel({
   }, [successMessage]);
 
   async function handleSave(data) {
+    if (saveLockRef.current) return;
     setSaveError('');
+    if (!safeDateKey) {
+      setSaveError('Geçersiz tarih. Lütfen günü yeniden seç.');
+      return;
+    }
     if (!user?.uid || !user?.email) {
       setSaveError('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yap.');
       return;
     }
+    saveLockRef.current = true;
+    setIsSaving(true);
     const profile = USER_PROFILES[user.email];
-    const normalizedDate = safeDateKey || dateKey;
+    const normalizedDate = safeDateKey;
     const entryData = {
       date: normalizedDate, year, month, day,
       userId: user.uid,
@@ -83,8 +93,11 @@ export default function DayDetailPanel({
       // refresh is fire-and-forget; errors are handled inside useEntries
       onRefresh();
     } catch (err) {
-      console.error('[FIRESTORE_CREATE_ERROR]', err.message);
+      console.error('[FIRESTORE_CREATE_ERROR]', getErrorMessage(err));
       setSaveError('Anı kaydedilemedi. Lütfen tekrar dene.');
+    } finally {
+      saveLockRef.current = false;
+      setIsSaving(false);
     }
   }
 
@@ -93,7 +106,7 @@ export default function DayDetailPanel({
       await deleteEntry(entryId);
       onRefresh();
     } catch (err) {
-      console.error('[FIRESTORE_DELETE_ERROR]', err.message);
+      console.error('[FIRESTORE_DELETE_ERROR]', getErrorMessage(err));
     }
   }
 
@@ -102,7 +115,7 @@ export default function DayDetailPanel({
       await updateEntry(entry.id, { favorite: !entry.favorite });
       onRefresh();
     } catch (err) {
-      console.error('[FIRESTORE_UPDATE_ERROR] favorite:', err.message);
+      console.error('[FIRESTORE_UPDATE_ERROR] favorite:', getErrorMessage(err));
     }
   }
 
@@ -143,9 +156,10 @@ export default function DayDetailPanel({
               <button
                 type="submit"
                 form={formId}
+                disabled={isSaving}
                 className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white rounded-full px-4 min-h-[44px] active:scale-[0.98] transition"
               >
-                {editingEntry ? 'Güncelle' : 'Kaydet'}
+                {isSaving ? 'Kaydediliyor…' : (editingEntry ? 'Güncelle' : 'Kaydet')}
               </button>
             )}
             <button onClick={onClose} className="text-[#6e9f87] hover:text-[#1f6b4b] text-2xl leading-none w-11 h-11 rounded-full active:scale-[0.98] transition">
@@ -178,6 +192,7 @@ export default function DayDetailPanel({
               initial={editingEntry}
               formId={formId}
               hideSubmitButton
+              externalSaving={isSaving}
             />
           </div>
         )}

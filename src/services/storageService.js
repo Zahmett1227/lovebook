@@ -1,6 +1,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../firebase';
 import { normalizeDateKey } from '../utils/dateUtils';
+import { getErrorMessage } from '../utils/errorUtils';
 
 function buildStorageDateParts(date) {
   const safeDate = normalizeDateKey(date);
@@ -8,6 +9,22 @@ function buildStorageDateParts(date) {
     throw new Error('Geçersiz tarih bilgisi.');
   }
   return safeDate.split('-');
+}
+
+function detectContentType(file, kind) {
+  const explicit = file?.type;
+  if (explicit && explicit.includes('/')) return explicit;
+  const lowerName = String(file?.name || '').toLowerCase();
+  if (kind === 'image') {
+    if (lowerName.endsWith('.png')) return 'image/png';
+    if (lowerName.endsWith('.webp')) return 'image/webp';
+    if (lowerName.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+  }
+  if (lowerName.endsWith('.mov')) return 'video/quicktime';
+  if (lowerName.endsWith('.m4v')) return 'video/x-m4v';
+  if (lowerName.endsWith('.webm')) return 'video/webm';
+  return 'video/mp4';
 }
 
 export async function uploadImages(files, date, userId) {
@@ -19,11 +36,20 @@ export async function uploadImages(files, date, userId) {
     const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const path = `memories/${year}/${month}/${day}/${userId}/${fileName}`;
     const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef, file, {
+      contentType: detectContentType(file, 'image'),
+      cacheControl: 'public,max-age=31536000,immutable',
+    });
     const url = await getDownloadURL(storageRef);
     return { url, path };
   });
-  return Promise.all(uploads);
+  const settled = await Promise.allSettled(uploads);
+  const success = settled.filter((item) => item.status === 'fulfilled').map((item) => item.value);
+  if (success.length === 0) {
+    const firstError = settled.find((item) => item.status === 'rejected');
+    throw new Error(getErrorMessage(firstError?.reason, 'Fotoğraflar yüklenemedi.'));
+  }
+  return success;
 }
 
 export async function uploadVideos(files, date, userId) {
@@ -35,7 +61,10 @@ export async function uploadVideos(files, date, userId) {
     const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const path = `memories/${year}/${month}/${day}/${userId}/${fileName}`;
     const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef, file, {
+      contentType: detectContentType(file, 'video'),
+      cacheControl: 'public,max-age=31536000,immutable',
+    });
     const url = await getDownloadURL(storageRef);
     return {
       url,
@@ -45,7 +74,13 @@ export async function uploadVideos(files, date, userId) {
       sizeBytes: file.size || 0,
     };
   });
-  return Promise.all(uploads);
+  const settled = await Promise.allSettled(uploads);
+  const success = settled.filter((item) => item.status === 'fulfilled').map((item) => item.value);
+  if (success.length === 0) {
+    const firstError = settled.find((item) => item.status === 'rejected');
+    throw new Error(getErrorMessage(firstError?.reason, 'Videolar yüklenemedi.'));
+  }
+  return success;
 }
 
 export async function deleteImage(path) {

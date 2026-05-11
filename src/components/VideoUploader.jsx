@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 
 const MAX_VIDEO_MB = 100;
+const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm'];
 
 export default function VideoUploader({ onFilesSelected, uploading, onError }) {
   const inputRef = useRef(null);
@@ -10,7 +11,10 @@ export default function VideoUploader({ onFilesSelected, uploading, onError }) {
     const validFiles = [];
 
     for (const file of files) {
-      if (!file.type?.startsWith('video/')) {
+      const lowerName = file.name.toLowerCase();
+      const hasVideoMime = file.type?.startsWith('video/');
+      const hasVideoExt = VIDEO_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+      if (!hasVideoMime && !hasVideoExt) {
         onError?.('Lütfen yalnızca video dosyası seç.');
         continue;
       }

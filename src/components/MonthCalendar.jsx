@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { buildMonthGrid } from '../utils/calendarUtils';
 import { MONTH_NAMES, WEEKDAY_NAMES } from '../utils/dateUtils';
 import { getMemoryTagEmoji, normalizeMemoryTagId } from '../config/memoryTags';
@@ -10,9 +11,17 @@ const MONTH_PALETTE = [
   'from-[#fff7f3] to-[#f3e6de]',
 ];
 
-export default function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
-  const cells = buildMonthGrid(year, month);
+function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
+  const cells = useMemo(() => buildMonthGrid(year, month), [year, month]);
+  const safeDatesWithContent = datesWithContent instanceof Set ? datesWithContent : new Set();
   const paletteClass = MONTH_PALETTE[(month - 1) % MONTH_PALETTE.length];
+  const emojisByDate = useMemo(() => {
+    const source = entriesByDate && typeof entriesByDate === 'object' ? entriesByDate : {};
+    return Object.entries(source).reduce((acc, [dateKey, entries]) => {
+      acc[dateKey] = getDayEmojis(entries ?? []);
+      return acc;
+    }, {});
+  }, [entriesByDate]);
 
   return (
     <div className={`bg-gradient-to-br ${paletteClass} backdrop-blur rounded-[1.25rem] border border-[#e8d7d0] p-3.5 flex flex-col gap-2 shadow-editorial`}>
@@ -38,10 +47,10 @@ export default function MonthCalendar({ year, month, datesWithContent, selectedD
               key={cell.dateKey}
               dateKey={cell.dateKey}
               day={cell.day}
-              hasContent={datesWithContent.has(cell.dateKey)}
+              hasContent={safeDatesWithContent.has(cell.dateKey)}
               isSelected={selectedDate === cell.dateKey}
               onClick={onSelectDate}
-              emojis={getDayEmojis(entriesByDate?.[cell.dateKey] ?? [])}
+              emojis={emojisByDate[cell.dateKey] ?? []}
               weekdaySlot={i % 7}
             />
           ) : (
@@ -62,3 +71,5 @@ function getDayEmojis(entries) {
 
   return uniqueTags.map(getMemoryTagEmoji).slice(0, 3);
 }
+
+export default memo(MonthCalendar);

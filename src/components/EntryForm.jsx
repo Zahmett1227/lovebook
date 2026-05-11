@@ -5,6 +5,7 @@ import VideoUploader from './VideoUploader';
 import { uploadImages, uploadVideos } from '../services/storageService';
 import { normalizeImageUrls, normalizeVideoItems } from '../utils/imageUtils';
 import { bytesToMb, estimateSessionCost } from '../utils/costUtils';
+import { getErrorMessage } from '../utils/errorUtils';
 
 export default function EntryForm({
   dateKey,
@@ -14,6 +15,7 @@ export default function EntryForm({
   initial,
   formId,
   hideSubmitButton = false,
+  externalSaving = false,
 }) {
   const [title, setTitle]   = useState(initial?.title ?? '');
   const [text, setText]     = useState(initial?.text ?? '');
@@ -55,9 +57,13 @@ export default function EntryForm({
       console.log('[STORAGE_UPLOAD_SUCCESS]', uploaded.length, 'files');
       setImages((prev) => [...(Array.isArray(prev) ? prev : []), ...uploaded]);
       setSessionFiles((prev) => [...prev, ...files]);
+      if (uploaded.length < files.length) {
+        setUploadError(`Bazı fotoğraflar yüklenemedi (${uploaded.length}/${files.length}).`);
+      }
     } catch (err) {
-      console.error('[STORAGE_UPLOAD_ERROR]', err.message);
-      setUploadError(`Fotoğraf yüklenemedi: ${err.message}`);
+      const message = getErrorMessage(err, 'Fotoğraf yüklenemedi.');
+      console.error('[STORAGE_UPLOAD_ERROR]', message);
+      setUploadError(`Fotoğraf yüklenemedi: ${message}`);
     } finally {
       setUploading(false);
     }
@@ -71,9 +77,13 @@ export default function EntryForm({
       console.log('[STORAGE_UPLOAD_SUCCESS]', uploaded.length, 'videos');
       setVideos((prev) => [...(Array.isArray(prev) ? prev : []), ...uploaded]);
       setSessionFiles((prev) => [...prev, ...files]);
+      if (uploaded.length < files.length) {
+        setUploadError(`Bazı videolar yüklenemedi (${uploaded.length}/${files.length}).`);
+      }
     } catch (err) {
-      console.error('[STORAGE_UPLOAD_ERROR]', err.message);
-      setUploadError(`Video yüklenemedi: ${err.message}`);
+      const message = getErrorMessage(err, 'Video yüklenemedi.');
+      console.error('[STORAGE_UPLOAD_ERROR]', message);
+      setUploadError(`Video yüklenemedi: ${message}`);
     } finally {
       setUploading(false);
     }
@@ -90,6 +100,7 @@ export default function EntryForm({
   async function handleSubmit(e) {
     e.preventDefault();
     if (!title.trim() && !text.trim() && images.length === 0 && videos.length === 0) return;
+    if (externalSaving) return;
     setSaving(true);
     try {
       // onSave handles its own error state and logging
@@ -234,10 +245,10 @@ export default function EntryForm({
           {!hideSubmitButton && (
             <button
               type="submit"
-              disabled={saving || uploading}
+              disabled={saving || uploading || externalSaving}
               className="text-sm bg-[#1f6b4b] hover:bg-[#195a40] text-white px-5 min-h-[44px] rounded-2xl transition disabled:opacity-60 active:scale-[0.98] flex-1 sm:flex-none"
             >
-              {saving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
+              {saving || externalSaving ? 'Kaydediliyor…' : initial ? 'Güncelle' : 'Kaydet'}
             </button>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 
 const MAX_MB = 10;
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 export default function ImageUploader({ onFilesSelected, uploading, onError }) {
   const inputRef = useRef(null);
@@ -12,15 +13,17 @@ export default function ImageUploader({ onFilesSelected, uploading, onError }) {
     for (const file of files) {
       const lowerName = file.name.toLowerCase();
       const isHeic = lowerName.endsWith('.heic') || lowerName.endsWith('.heif')
-        || file.type.includes('heic')
-        || file.type.includes('heif');
+        || file.type?.includes('heic')
+        || file.type?.includes('heif');
+      const hasImageMime = file.type?.startsWith('image/');
+      const hasImageExt = IMAGE_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
 
       if (isHeic) {
         onError?.('Bu fotoğraf formatı desteklenmiyor, lütfen JPEG/PNG seç.');
         continue;
       }
 
-      if (!file.type.startsWith('image/')) {
+      if (!hasImageMime && !hasImageExt) {
         onError?.('Lütfen yalnızca görsel dosyası seç.');
         continue;
       }
