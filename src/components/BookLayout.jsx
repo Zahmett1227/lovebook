@@ -15,8 +15,8 @@ export default function BookLayout({ children }) {
           style={{
             inset: 0,
             transform: 'translate(6px, 8px)',
-            background: '#7cae94',
-            opacity: 0.45,
+            background: '#d4aba3',
+            opacity: 0.34,
             borderRadius: '1.5rem',
           }}
         />
@@ -25,21 +25,21 @@ export default function BookLayout({ children }) {
           style={{
             inset: 0,
             transform: 'translate(3px, 4px)',
-            background: '#98c6ae',
-            opacity: 0.6,
+            background: '#e5c4bc',
+            opacity: 0.54,
             borderRadius: '1.5rem',
           }}
         />
 
         {/* Main book body */}
         <div
-          className="relative bg-[#f6fdf9] rounded-2xl overflow-hidden"
+          className="relative bg-[#fff9f6] rounded-2xl overflow-hidden"
           style={{
             minHeight: 'calc(100dvh - 24px)',
             boxShadow:
-              '-10px 0 30px rgba(0,0,0,0.10), ' +
-              '10px 0  30px rgba(0,0,0,0.10), ' +
-              '0  28px 70px rgba(0,0,0,0.18), ' +
+              '-10px 0 30px rgba(91,47,47,0.08), ' +
+              '10px 0  30px rgba(91,47,47,0.08), ' +
+              '0  28px 70px rgba(91,47,47,0.16), ' +
               'inset 0 0 0 1px rgba(255,255,255,0.7)',
           }}
         >
@@ -48,7 +48,7 @@ export default function BookLayout({ children }) {
             className="absolute inset-y-0 left-0 w-3 pointer-events-none"
             style={{
               background:
-                'linear-gradient(to right, rgba(0,0,0,0.04), transparent)',
+                'linear-gradient(to right, rgba(131,78,78,0.08), transparent)',
             }}
           />
           {/* Right-edge page lines */}
@@ -56,7 +56,7 @@ export default function BookLayout({ children }) {
             className="absolute inset-y-0 right-0 w-3 pointer-events-none"
             style={{
               background:
-                'linear-gradient(to left, rgba(0,0,0,0.04), transparent)',
+                'linear-gradient(to left, rgba(131,78,78,0.08), transparent)',
             }}
           />
 

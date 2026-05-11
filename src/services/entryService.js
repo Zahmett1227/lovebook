@@ -10,8 +10,42 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { normalizeDateKey } from '../utils/dateUtils';
+import { normalizeImageUrls } from '../utils/imageUtils';
 
 const COLLECTION = 'entries';
+
+function normalizeVideoItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === 'string') return { url: item };
+      if (!item || typeof item !== 'object') return null;
+      const url = typeof item.url === 'string'
+        ? item.url
+        : (typeof item.downloadURL === 'string' ? item.downloadURL : null);
+      if (!url) return null;
+      return {
+        url,
+        path: typeof item.path === 'string' ? item.path : '',
+        contentType: typeof item.contentType === 'string' ? item.contentType : '',
+        sizeBytes: Number.isFinite(item.sizeBytes) ? item.sizeBytes : 0,
+        name: typeof item.name === 'string' ? item.name : '',
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeEntry(raw) {
+  const safeDate = normalizeDateKey(raw?.date) ?? '';
+  return {
+    ...raw,
+    date: safeDate,
+    favorite: Boolean(raw?.favorite),
+    imageUrls: normalizeImageUrls(raw?.imageUrls),
+    videoUrls: normalizeVideoItems(raw?.videoUrls),
+  };
+}
 
 // Sort by createdAt in JS — avoids composite index requirement in Firestore
 function sortByCreatedAt(docs) {
@@ -21,7 +55,7 @@ function sortByCreatedAt(docs) {
 export async function getEntriesByYear(year) {
   const q = query(collection(db, COLLECTION), where('year', '==', year));
   const snap = await getDocs(q);
-  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
   console.log('[FIRESTORE_READ] getEntriesByYear', year, '→', docs.length, 'entries');
   return sortByCreatedAt(docs);
 }
@@ -29,14 +63,14 @@ export async function getEntriesByYear(year) {
 export async function getEntriesByDate(dateStr) {
   const q = query(collection(db, COLLECTION), where('date', '==', dateStr));
   const snap = await getDocs(q);
-  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
   console.log('[FIRESTORE_READ] getEntriesByDate', dateStr, '→', docs.length, 'entries');
   return sortByCreatedAt(docs);
 }
 
 export async function getAllEntries() {
   const snap = await getDocs(collection(db, COLLECTION));
-  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const docs = snap.docs.map((d) => normalizeEntry({ id: d.id, ...d.data() }));
   console.log('[FIRESTORE_READ] getAllEntries →', docs.length, 'entries');
   return sortByCreatedAt(docs);
 }

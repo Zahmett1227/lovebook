@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { INITIAL_YEAR, MIN_YEAR } from './config/appConfig';
 import { getMemoryTagById, normalizeMemoryTagId } from './config/memoryTags';
 import { normalizeDateKey } from './utils/dateUtils';
+import { normalizeVideoItems, resolveImageUrl } from './utils/imageUtils';
+import { bytesToMb } from './utils/costUtils';
 import { useSelectedDate } from './hooks/useSelectedDate';
 import { useYearEntries, useDayEntries } from './hooks/useEntries';
 import { getAllEntries } from './services/entryService';
@@ -27,6 +29,13 @@ function AppContent() {
   const [allEntriesLoading, setAllEntriesLoading] = useState(false);
   const [randomStatus, setRandomStatus] = useState('');
   const [randomLoading, setRandomLoading] = useState(false);
+  const [sessionCostPreview, setSessionCostPreview] = useState({
+    totalBytes: 0,
+    storageUsd: 0,
+    operationUsd: 0,
+    totalUsd: 0,
+    uploadOps: 0,
+  });
   const pendingYear = useRef(null);
 
   const { selectedDate, selectDate, clearDate } = useSelectedDate();
@@ -79,11 +88,18 @@ function AppContent() {
   }
 
   function handleAnimEnd() {
+    const pending = pendingYear.current;
     if (pageAnim === 'exit-forward') {
-      setYear(pendingYear.current);
+      if (Number.isFinite(pending)) {
+        setYear(pending);
+      }
+      pendingYear.current = null;
       setPageAnim('enter-forward');
     } else if (pageAnim === 'exit-back') {
-      setYear(pendingYear.current);
+      if (Number.isFinite(pending)) {
+        setYear(pending);
+      }
+      pendingYear.current = null;
       setPageAnim('enter-back');
     } else {
       // enter animation finished
@@ -112,6 +128,28 @@ function AppContent() {
   useEffect(() => {
     refreshAllEntries();
   }, [refreshAllEntries]);
+
+  useEffect(() => {
+    function readSessionCost() {
+      try {
+        const raw = localStorage.getItem('lovebook-session-cost');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        setSessionCostPreview({
+          totalBytes: Number(parsed?.totalBytes) || 0,
+          storageUsd: Number(parsed?.storageUsd) || 0,
+          operationUsd: Number(parsed?.operationUsd) || 0,
+          totalUsd: Number(parsed?.totalUsd) || 0,
+          uploadOps: Number(parsed?.uploadOps) || 0,
+        });
+      } catch {
+        // ignore malformed local storage
+      }
+    }
+    readSessionCost();
+    window.addEventListener('lovebook-session-cost-update', readSessionCost);
+    return () => window.removeEventListener('lovebook-session-cost-update', readSessionCost);
+  }, []);
 
   useEffect(() => {
     if (!randomStatus) return;
@@ -184,6 +222,22 @@ function AppContent() {
 
       <div className="px-4 sm:px-6 pt-2 pb-2">
         <div className="rounded-2xl border border-[#cbe3d5] bg-white/80 p-3">
+          <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Blaze Yükleme Tahmini</h3>
+          <div className="rounded-xl border border-[#d7ebde] bg-[#f7fcf9] p-2 mb-3">
+            <div className="flex items-center justify-between text-[11px] text-[#2e664c]">
+              <span>Son yükleme oturumu</span>
+              <span>{bytesToMb(sessionCostPreview.totalBytes).toFixed(2)} MB</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[#dbeee2] overflow-hidden mt-1.5">
+              <div
+                className="h-full bg-[#2d7b58]"
+                style={{ width: `${Math.min((bytesToMb(sessionCostPreview.totalBytes) / 100) * 100, 100)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-[#4b7f66] mt-1">
+              Depolama: ${sessionCostPreview.storageUsd.toFixed(4)} • İşlem: ${sessionCostPreview.operationUsd.toFixed(4)} • Toplam: ${sessionCostPreview.totalUsd.toFixed(4)}
+            </p>
+          </div>
           <h3 className="text-sm font-semibold text-[#1d5e43] mb-2">Son Anılar</h3>
           {allEntriesLoading ? (
             <p className="text-xs text-[#6b9c86]">Yükleniyor…</p>
@@ -194,7 +248,8 @@ function AppContent() {
               {latestEntries.map((entry) => {
                 const normalizedTag = normalizeMemoryTagId(entry.tag || entry.mood || null);
                 const tagMeta = getMemoryTagById(normalizedTag);
-                const previewImage = entry.imageUrls?.[0];
+                const previewImage = resolveImageUrl(entry.imageUrls?.[0]);
+                const previewVideo = normalizeVideoItems(entry.videoUrls)[0];
                 return (
                   <button
                     key={entry.id}
@@ -207,13 +262,17 @@ function AppContent() {
                     className="w-full text-left rounded-xl border border-[#d7ebde] bg-[#fbfffc] hover:bg-[#eef9f2] px-3 py-2 transition active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-2">
-                      {previewImage && (
+                      {previewImage ? (
                         <img
-                          src={typeof previewImage === 'object' ? previewImage.url : previewImage}
+                          src={previewImage}
                           alt=""
                           className="w-10 h-10 rounded-lg object-cover shrink-0"
                         />
-                      )}
+                      ) : previewVideo ? (
+                        <div className="w-10 h-10 rounded-lg shrink-0 bg-[#dcefe4] text-[#1f6b4b] flex items-center justify-center text-[10px]">
+                          VIDEO
+                        </div>
+                      ) : null}
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] text-[#6b9c86]">
                           {entry.date} • {entry.userDisplayName}

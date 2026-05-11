@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MEMORY_TAGS, normalizeMemoryTagId } from '../config/memoryTags';
 import ImageUploader from './ImageUploader';
-import { uploadImages } from '../services/storageService';
+import VideoUploader from './VideoUploader';
+import { uploadImages, uploadVideos } from '../services/storageService';
+import { normalizeImageUrls, normalizeVideoItems } from '../utils/imageUtils';
+import { bytesToMb, estimateSessionCost } from '../utils/costUtils';
 
 export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }) {
   const [title, setTitle]   = useState(initial?.title ?? '');
@@ -9,18 +12,41 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
   const [selectedTag, setSelectedTag] = useState(
     normalizeMemoryTagId(initial?.tag || initial?.mood || '')
   );
-  const [images, setImages] = useState(initial?.imageUrls ?? []);
+  const [images, setImages] = useState(normalizeImageUrls(initial?.imageUrls));
+  const [videos, setVideos] = useState(normalizeVideoItems(initial?.videoUrls));
+  const [sessionFiles, setSessionFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [uploadError, setUploadError] = useState('');
 
-  async function handleFiles(files) {
+  const sessionCost = useMemo(() => estimateSessionCost(sessionFiles), [sessionFiles]);
+  const sessionSizeMb = useMemo(() => bytesToMb(sessionCost.totalBytes), [sessionCost.totalBytes]);
+  const usagePercent = Math.min((sessionSizeMb / 100) * 100, 100);
+
+  useEffect(() => {
+    const payload = {
+      totalBytes: sessionCost.totalBytes,
+      storageUsd: sessionCost.storageUsd,
+      operationUsd: sessionCost.operationUsd,
+      totalUsd: sessionCost.totalUsd,
+      uploadOps: sessionCost.uploadOps,
+    };
+    try {
+      localStorage.setItem('lovebook-session-cost', JSON.stringify(payload));
+      window.dispatchEvent(new CustomEvent('lovebook-session-cost-update', { detail: payload }));
+    } catch {
+      // best effort only
+    }
+  }, [sessionCost]);
+
+  async function handleImageFiles(files) {
     setUploadError('');
     setUploading(true);
     try {
       const uploaded = await uploadImages(files, dateKey, userId);
       console.log('[STORAGE_UPLOAD_SUCCESS]', uploaded.length, 'files');
-      setImages((prev) => [...prev, ...uploaded]);
+      setImages((prev) => [...(Array.isArray(prev) ? prev : []), ...uploaded]);
+      setSessionFiles((prev) => [...prev, ...files]);
     } catch (err) {
       console.error('[STORAGE_UPLOAD_ERROR]', err.message);
       setUploadError(`Fotoğraf yüklenemedi: ${err.message}`);
@@ -29,13 +55,33 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
     }
   }
 
+  async function handleVideoFiles(files) {
+    setUploadError('');
+    setUploading(true);
+    try {
+      const uploaded = await uploadVideos(files, dateKey, userId);
+      console.log('[STORAGE_UPLOAD_SUCCESS]', uploaded.length, 'videos');
+      setVideos((prev) => [...(Array.isArray(prev) ? prev : []), ...uploaded]);
+      setSessionFiles((prev) => [...prev, ...files]);
+    } catch (err) {
+      console.error('[STORAGE_UPLOAD_ERROR]', err.message);
+      setUploadError(`Video yüklenemedi: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function removeImage(index) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => (Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []));
+  }
+
+  function removeVideo(index) {
+    setVideos((prev) => (Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!title.trim() && !text.trim() && images.length === 0) return;
+    if (!title.trim() && !text.trim() && images.length === 0 && videos.length === 0) return;
     setSaving(true);
     try {
       // onSave handles its own error state and logging
@@ -47,6 +93,7 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
         mood: selectedTag || '',
         favorite: initial?.favorite ?? false,
         imageUrls: images,
+        videoUrls: videos,
       });
     } finally {
       setSaving(false);
@@ -115,12 +162,59 @@ export default function EntryForm({ dateKey, userId, onSave, onCancel, initial }
         </div>
       )}
 
+      {videos.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {videos.map((video, i) => (
+            <div key={i} className="relative rounded-xl overflow-hidden border border-[#cbe3d5] bg-white">
+              <video
+                src={video.url}
+                controls
+                preload="metadata"
+                className="w-full h-36 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => removeVideo(i)}
+                className="absolute top-1 right-1 w-6 h-6 bg-black/65 text-white rounded-full text-sm flex items-center justify-center leading-none active:scale-[0.98]"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sessionFiles.length > 0 && (
+        <div className="rounded-2xl border border-[#cbe3d5] bg-[#f4fbf7] p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs text-[#2e664c]">
+            <span>Blaze Tahmini (bu yükleme oturumu)</span>
+            <span>{sessionSizeMb.toFixed(2)} MB</span>
+          </div>
+          <div className="h-2 rounded-full bg-[#dbeee2] overflow-hidden">
+            <div
+              className="h-full bg-[#2d7b58] transition-all"
+              style={{ width: `${usagePercent}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-[#4b7f66]">
+            Aylık depolama: ${sessionCost.storageUsd.toFixed(4)} • İşlem: ${sessionCost.operationUsd.toFixed(4)} • Toplam: ${sessionCost.totalUsd.toFixed(4)}
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <ImageUploader
-          onFilesSelected={handleFiles}
-          uploading={uploading}
-          onError={setUploadError}
-        />
+        <div className="flex flex-wrap gap-2">
+          <ImageUploader
+            onFilesSelected={handleImageFiles}
+            uploading={uploading}
+            onError={setUploadError}
+          />
+          <VideoUploader
+            onFilesSelected={handleVideoFiles}
+            uploading={uploading}
+            onError={setUploadError}
+          />
+        </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             type="button"

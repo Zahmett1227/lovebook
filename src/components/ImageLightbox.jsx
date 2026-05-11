@@ -10,6 +10,9 @@ export default function ImageLightbox({ images, startIndex, onClose }) {
   }, [onClose]);
 
   if (!images?.length) return null;
+  const safeIndex = Number.isInteger(startIndex) && startIndex >= 0 && startIndex < images.length
+    ? startIndex
+    : 0;
 
   return (
     <div
@@ -23,7 +26,7 @@ export default function ImageLightbox({ images, startIndex, onClose }) {
         ×
       </button>
       <img
-        src={images[startIndex]}
+        src={images[safeIndex]}
         alt=""
         className="max-w-full max-h-[90vh] rounded-lg shadow-2xl object-contain"
         onClick={(e) => e.stopPropagation()}

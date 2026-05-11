@@ -20,7 +20,11 @@ export function useYearEntries(year) {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  const datesWithContent = new Set(entries.map((e) => e.date));
+  const datesWithContent = new Set(
+    (Array.isArray(entries) ? entries : [])
+      .map((e) => e?.date)
+      .filter(Boolean)
+  );
   return { entries, datesWithContent, loading, refresh: fetch };
 }
 

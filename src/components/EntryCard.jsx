@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getMemoryTagById, normalizeMemoryTagId } from '../config/memoryTags';
+import { normalizeImageUrls, normalizeVideoItems } from '../utils/imageUtils';
 import ImageLightbox from './ImageLightbox';
 
 export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFavorite }) {
@@ -8,6 +9,8 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
 
   const entryTag = normalizeMemoryTagId(entry.tag || entry.mood || null);
   const tagMeta = getMemoryTagById(entryTag);
+  const imageUrls = normalizeImageUrls(entry.imageUrls);
+  const videoItems = normalizeVideoItems(entry.videoUrls);
   const createdTime = entry.createdAt?.toDate
     ? entry.createdAt.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
     : '';
@@ -79,20 +82,35 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
       )}
 
       {/* Images */}
-      {entry.imageUrls?.length > 0 && (
+      {imageUrls.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
-          {entry.imageUrls.map((img, i) => (
+          {imageUrls.map((img, i) => (
             <button
               key={i}
               onClick={() => setLightbox(i)}
               className="aspect-square rounded-xl overflow-hidden hover:opacity-90 transition-opacity active:scale-[0.98]"
             >
               <img
-                src={typeof img === 'object' ? img.url : img}
+                src={img}
                 alt=""
                 className="w-full h-full object-cover"
               />
             </button>
+          ))}
+        </div>
+      )}
+
+      {videoItems.length > 0 && (
+        <div className="space-y-2">
+          {videoItems.map((video, i) => (
+            <div key={`${video.url}-${i}`} className="rounded-xl overflow-hidden border border-[#cbe3d5] bg-white">
+              <video
+                src={video.url}
+                controls
+                preload="metadata"
+                className="w-full max-h-64 object-cover"
+              />
+            </div>
           ))}
         </div>
       )}
@@ -106,9 +124,7 @@ export default function EntryCard({ entry, isOwner, onEdit, onDelete, onToggleFa
 
       {lightbox !== null && (
         <ImageLightbox
-          images={(entry.imageUrls || []).map((img) =>
-            typeof img === 'object' ? img.url : img
-          )}
+          images={imageUrls}
           startIndex={lightbox}
           onClose={() => setLightbox(null)}
         />

@@ -18,17 +18,23 @@ export default function YearPage({
   return (
     <>
       <div className="px-4 sm:px-6 pt-4 pb-2">
-        <div className="rounded-3xl border border-white/70 bg-gradient-to-br from-[#f4fcf7] via-[#e0f5eb] to-[#d9edf7] px-4 py-4 shadow-sm relative overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-[#f4c6c6]/35 blur-xl" />
-          <div className="absolute -bottom-10 -left-8 w-28 h-28 rounded-full bg-[#b9d7ff]/30 blur-xl" />
-          <p className="font-hero-sub text-xs uppercase tracking-[0.2em] text-[#4f8f74] relative text-center">Bizim Günlüğümüz</p>
-          <h2 className="font-hero-title text-3xl sm:text-[2.1rem] font-extrabold text-[#0f4f37] leading-tight mt-1 text-center">{year}</h2>
-          <p className="font-hero-sub text-sm sm:text-[15px] text-[#2d7c59] mt-1 relative text-center">Bugün yeni bir anı ekleyelim mi?</p>
+        <div className="rounded-[1.8rem] border border-[#ead4ce] bg-gradient-to-br from-[#fff9f8] via-[#fbeee8] to-[#f8e7df] px-4 py-5 shadow-editorial relative overflow-hidden">
+          <div className="absolute -top-10 -right-6 w-24 h-24 rounded-full bg-[#efc1c7]/35 blur-2xl" />
+          <div className="absolute -bottom-12 -left-10 w-28 h-28 rounded-full bg-[#e8c7a9]/30 blur-2xl" />
+          <p className="font-hero-sub text-[10px] uppercase tracking-[0.28em] text-[#a0726c] relative text-center">
+            Bizim Günlüğümüz
+          </p>
+          <h2 className="font-hero-title text-[2.15rem] sm:text-[2.45rem] font-semibold text-[#5a3738] leading-none mt-2 text-center">
+            {year}
+          </h2>
+          <p className="font-hero-sub text-sm sm:text-[15px] text-[#8f5f5f] mt-2 relative text-center">
+            Yeni bir sayfa, yeni bir hatıra.
+          </p>
         </div>
       </div>
 
       <div className="px-4 sm:px-6 pb-1">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5">
           <FilterChip
             active={activeTagFilter === 'all'}
             onClick={() => onTagFilterChange?.('all')}
@@ -46,7 +52,7 @@ export default function YearPage({
       </div>
 
       {/* ── Mobile / tablet: single column ── */}
-      <div className="lg:hidden px-4 pb-6 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="lg:hidden px-4 pb-6 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[...LEFT_MONTHS, ...RIGHT_MONTHS].map((month) => (
           <MonthCalendar key={month} month={month} {...calendarProps} />
         ))}
@@ -57,10 +63,10 @@ export default function YearPage({
 
         {/* Left page — Jan–Jun */}
         <div
-          className="flex-1 grid grid-cols-3 gap-3 px-6 pb-4 relative"
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-l-[1.6rem] border border-[#ead8d1]"
           style={{
             background:
-              'linear-gradient(to bottom, #f8fdf9 0%, #f0f9f3 100%)',
+              'linear-gradient(to bottom, #fff9f8 0%, #f8ebe3 100%)',
           }}
         >
           {/* Subtle horizontal line rules (page texture) */}
@@ -70,7 +76,7 @@ export default function YearPage({
           ))}
 
           {/* Page number */}
-          <div className="absolute bottom-2 left-6 text-[10px] text-[#6ea487] font-display italic select-none">
+          <div className="absolute bottom-2 left-6 text-[10px] text-[#b3877f] font-display italic select-none">
             {year}
           </div>
         </div>
@@ -80,7 +86,7 @@ export default function YearPage({
           {/* Centre crease */}
           <div
             className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px"
-            style={{ background: '#6ea487', opacity: 0.5 }}
+            style={{ background: '#c79e95', opacity: 0.5 }}
           />
           {/* Gradient shadow left of spine */}
           <div
@@ -88,7 +94,7 @@ export default function YearPage({
             style={{
               width: 20,
               background:
-                'linear-gradient(to left, rgba(0,0,0,0.06), transparent)',
+                'linear-gradient(to left, rgba(72,32,32,0.09), transparent)',
             }}
           />
           {/* Gradient shadow right of spine */}
@@ -97,17 +103,17 @@ export default function YearPage({
             style={{
               width: 20,
               background:
-                'linear-gradient(to right, rgba(0,0,0,0.06), transparent)',
+                'linear-gradient(to right, rgba(72,32,32,0.09), transparent)',
             }}
           />
         </div>
 
         {/* Right page — Jul–Dec */}
         <div
-          className="flex-1 grid grid-cols-3 gap-3 px-6 pb-4 relative"
+          className="flex-1 grid grid-cols-3 gap-4 px-6 pb-4 relative rounded-r-[1.6rem] border border-[#ead8d1]"
           style={{
             background:
-              'linear-gradient(to bottom, #f8fdf9 0%, #f0f9f3 100%)',
+              'linear-gradient(to bottom, #fff9f8 0%, #f8ebe3 100%)',
           }}
         >
           <PageLines />
@@ -116,7 +122,7 @@ export default function YearPage({
           ))}
 
           {/* Page number */}
-          <div className="absolute bottom-2 right-6 text-[10px] text-[#6ea487] font-display italic select-none">
+          <div className="absolute bottom-2 right-6 text-[10px] text-[#b3877f] font-display italic select-none">
             {year}
           </div>
         </div>
@@ -129,10 +135,10 @@ function FilterChip({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`text-xs whitespace-nowrap rounded-full border px-3 min-h-[36px] transition active:scale-[0.98] ${
+      className={`font-hero-sub text-xs whitespace-nowrap rounded-full border px-3.5 min-h-[36px] transition active:scale-[0.98] ${
         active
-          ? 'bg-[#1f6b4b] border-[#1f6b4b] text-white'
-          : 'bg-white/90 border-[#cbe3d5] text-[#2a5f45] hover:bg-[#edf8f2]'
+          ? 'bg-[#8f5f5f] border-[#8f5f5f] text-white shadow-sm'
+          : 'bg-[#fffaf8] border-[#e7d3cb] text-[#7a4f4f] hover:bg-[#f8ece7]'
       }`}
     >
       {label}
@@ -147,7 +153,7 @@ function PageLines() {
       className="absolute inset-0 pointer-events-none"
       style={{
         backgroundImage:
-          'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(58,111,84,0.10) 32px)',
+          'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(152,102,96,0.10) 32px)',
         backgroundSize: '100% 32px',
       }}
     />

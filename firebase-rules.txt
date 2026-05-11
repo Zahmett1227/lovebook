@@ -50,8 +50,11 @@ service firebase.storage {
           "ahmetkarasakal184@gmail.com",
           "tugba.caglar.2001@gmail.com"
         ]
-        && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.size < 100 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*') ||
+          request.resource.contentType.matches('video/.*')
+        );
 
       allow delete: if request.auth != null
         && request.auth.token.email in [

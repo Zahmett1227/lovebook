@@ -55,9 +55,14 @@ export default function DayDetailPanel({
 
   async function handleSave(data) {
     setSaveError('');
+    if (!user?.uid || !user?.email) {
+      setSaveError('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yap.');
+      return;
+    }
     const profile = USER_PROFILES[user.email];
+    const normalizedDate = safeDateKey || dateKey;
     const entryData = {
-      date: dateKey, year, month, day,
+      date: normalizedDate, year, month, day,
       userId: user.uid,
       userEmail: user.email,
       userDisplayName: profile?.displayName ?? user.email,
@@ -156,8 +161,8 @@ export default function DayDetailPanel({
               </p>
             )}
             <EntryForm
-              dateKey={dateKey}
-              userId={user.uid}
+              dateKey={safeDateKey || dateKey}
+              userId={user?.uid ?? ''}
               onSave={handleSave}
               onCancel={cancelForm}
               initial={editingEntry}
@@ -185,7 +190,7 @@ export default function DayDetailPanel({
                   ? <EmptyState message={activeTagFilter === 'all' ? 'Bu güne henüz anı bırakmamışız. İlk notu sen ekle.' : 'Bu etikete ait anı bulunamadı.'} />
                   : leftEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
-                        isOwner={user.email === e.userEmail}
+                        isOwner={user?.email === e.userEmail}
                         onEdit={startEdit}
                         onDelete={handleDelete}
                         onToggleFavorite={handleToggleFavorite}
@@ -208,7 +213,7 @@ export default function DayDetailPanel({
                   ? <EmptyState message={activeTagFilter === 'all' ? 'Bu güne henüz anı bırakmamışız. İlk notu sen ekle.' : 'Bu etikete ait anı bulunamadı.'} />
                   : rightEntries.map((e) => (
                       <EntryCard key={e.id} entry={e}
-                        isOwner={user.email === e.userEmail}
+                        isOwner={user?.email === e.userEmail}
                         onEdit={startEdit}
                         onDelete={handleDelete}
                         onToggleFavorite={handleToggleFavorite}

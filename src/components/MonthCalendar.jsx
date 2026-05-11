@@ -4,10 +4,10 @@ import { getMemoryTagEmoji, normalizeMemoryTagId } from '../config/memoryTags';
 import DayCell from './DayCell';
 
 const MONTH_PALETTE = [
-  'from-[#e8f7ef] to-[#eff9ff]',
-  'from-[#ebf4ff] to-[#eef9f2]',
-  'from-[#f1fce9] to-[#eef9f2]',
-  'from-[#fff1e8] to-[#eef9f2]',
+  'from-[#fff9f7] to-[#f9ece5]',
+  'from-[#fff8f5] to-[#f4ebe3]',
+  'from-[#fffaf8] to-[#f8ede8]',
+  'from-[#fff7f3] to-[#f3e6de]',
 ];
 
 export default function MonthCalendar({ year, month, datesWithContent, selectedDate, onSelectDate, entriesByDate }) {
@@ -15,23 +15,23 @@ export default function MonthCalendar({ year, month, datesWithContent, selectedD
   const paletteClass = MONTH_PALETTE[(month - 1) % MONTH_PALETTE.length];
 
   return (
-    <div className={`bg-gradient-to-br ${paletteClass} backdrop-blur rounded-2xl border border-[#cbe3d5] p-3 flex flex-col gap-1.5 shadow-sm`}>
+    <div className={`bg-gradient-to-br ${paletteClass} backdrop-blur rounded-[1.25rem] border border-[#e8d7d0] p-3.5 flex flex-col gap-2 shadow-editorial`}>
       {/* Month name */}
-      <h3 className="font-display text-center text-sm font-semibold text-[#26553f] mb-1">
+      <h3 className="font-display text-center text-[1.05rem] font-semibold text-[#6d4346] mb-1 tracking-[0.02em]">
         {MONTH_NAMES[month - 1]}
       </h3>
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAY_NAMES.map((w) => (
-          <div key={w} className="text-center text-[10px] text-[#6f9d86] font-medium">
+          <div key={w} className="text-center text-[10px] text-[#a17872] font-semibold uppercase tracking-[0.08em]">
             {w}
           </div>
         ))}
       </div>
 
       {/* Day cells */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5">
         {cells.map((cell, i) =>
           cell ? (
             <DayCell
@@ -42,9 +42,10 @@ export default function MonthCalendar({ year, month, datesWithContent, selectedD
               isSelected={selectedDate === cell.dateKey}
               onClick={onSelectDate}
               emojis={getDayEmojis(entriesByDate?.[cell.dateKey] ?? [])}
+              weekdaySlot={i % 7}
             />
           ) : (
-            <div key={`empty-${i}`} className="h-11 min-h-[44px]" />
+            <div key={`empty-${i}`} className="h-11 min-h-[44px] rounded-[0.95rem] border border-dashed border-[#ead8d1] bg-[#fff9f7]/60" />
           )
         )}
       </div>
