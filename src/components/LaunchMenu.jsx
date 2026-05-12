@@ -1,18 +1,32 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ALLOWED_USERS,
   INITIAL_YEAR,
+  MIN_YEAR,
   RELATIONSHIP_START_DATE,
   USER_PROFILES,
   generateCoupleId,
 } from '../config/appConfig';
 import { MEMORY_TAGS } from '../config/memoryTags';
-import { daysTogetherCount } from '../utils/dateUtils';
+import { daysTogetherCount, todayKey } from '../utils/dateUtils';
 import { useCoupleProfile } from '../hooks/useCoupleProfile';
+
+function openHtmlDatePicker(input) {
+  if (!input) return;
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker();
+      return;
+    } catch {
+      // Bazı tarayıcılar (özellikle eski iOS) showPicker’ı desteklemez veya güvenlik nedeniyle reddeder.
+    }
+  }
+  input.click();
+}
 
 export default function LaunchMenu({
   onAddToday,
-  onAddDifferentDate,
+  onDifferentDatePicked,
   onReviewByDate,
   onReviewByMood,
   onRandomMemory,
@@ -20,6 +34,9 @@ export default function LaunchMenu({
   entries = [],
 }) {
   const [showReviewOptions, setShowReviewOptions] = useState(false);
+  const differentDateInputRef = useRef(null);
+  const datePickMin = `${MIN_YEAR}-01-01`;
+  const datePickMax = todayKey();
 
   const coupleId = useMemo(() => generateCoupleId(ALLOWED_USERS[0], ALLOWED_USERS[1]), []);
   const { profile } = useCoupleProfile(coupleId);
@@ -177,11 +194,31 @@ export default function LaunchMenu({
       </div>
 
       <div className="space-y-3 max-w-2xl mx-auto">
+        <input
+          ref={differentDateInputRef}
+          type="date"
+          min={datePickMin}
+          max={datePickMax}
+          className="sr-only"
+          tabIndex={-1}
+          aria-label="Anı eklemek için tarih seçin"
+          onChange={(e) => {
+            const value = e.target.value;
+            e.target.value = '';
+            if (!value || typeof onDifferentDatePicked !== 'function') return;
+            onDifferentDatePicked(value);
+          }}
+        />
+
         <MenuButton onClick={onAddToday} emphasis icon="✦" sublabel="Bugünün anısını ekle">
           Bugüne anı ekle
         </MenuButton>
 
-        <MenuButton onClick={onAddDifferentDate} icon="🗓" sublabel="Geçmiş bir güne git">
+        <MenuButton
+          onClick={() => openHtmlDatePicker(differentDateInputRef.current)}
+          icon="🗓"
+          sublabel="Sistem tarih seçicisi (iPhone’da iOS ekranı)"
+        >
           Farklı bir güne anı ekle
         </MenuButton>
 

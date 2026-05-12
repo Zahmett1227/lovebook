@@ -389,8 +389,11 @@ function AppContent() {
     openDateDetail(todayKey());
   }
 
-  function goToCalendarMode() {
+  function goToDateFromPicker(rawDateKey) {
+    const safeDate = normalizeDateKey(rawDateKey);
+    if (!safeDate) return;
     setViewMode('calendar');
+    openDateDetail(safeDate);
   }
 
   function goToReviewDateMode() {
@@ -472,7 +475,7 @@ function AppContent() {
         <LaunchMenu
           entries={yearEntries}
           onAddToday={goToTodayComposer}
-          onAddDifferentDate={goToCalendarMode}
+          onDifferentDatePicked={goToDateFromPicker}
           onReviewByDate={goToReviewDateMode}
           onReviewByMood={goToReviewMoodMode}
           onRandomMemory={openRandomMemory}
