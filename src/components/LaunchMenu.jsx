@@ -11,8 +11,14 @@ import { MEMORY_TAGS } from '../config/memoryTags';
 import { daysTogetherCount, todayKey } from '../utils/dateUtils';
 import { useCoupleProfile } from '../hooks/useCoupleProfile';
 
+let datePickerOpenLockUntil = 0;
+
 function openHtmlDatePicker(input) {
   if (!input) return;
+  const now = Date.now();
+  if (now < datePickerOpenLockUntil) return;
+  datePickerOpenLockUntil = now + 400;
+
   if (typeof input.showPicker === 'function') {
     try {
       input.showPicker();
@@ -35,7 +41,7 @@ export default function LaunchMenu({
 }) {
   const [showReviewOptions, setShowReviewOptions] = useState(false);
   const differentDateInputRef = useRef(null);
-  const differentDateInputId = 'launch-menu-different-date';
+  const lastDifferentDateRef = useRef('');
   const datePickMin = `${MIN_YEAR}-01-01`;
   const datePickMax = todayKey();
 
@@ -197,7 +203,6 @@ export default function LaunchMenu({
       <div className="space-y-3 max-w-2xl mx-auto">
         <input
           ref={differentDateInputRef}
-          id={differentDateInputId}
           type="date"
           min={datePickMin}
           max={datePickMax}
@@ -206,8 +211,13 @@ export default function LaunchMenu({
           aria-label="Anı eklemek için tarih seçin"
           onChange={(e) => {
             const value = e.target.value;
+            if (!value || value === lastDifferentDateRef.current) {
+              e.target.value = '';
+              return;
+            }
+            lastDifferentDateRef.current = value;
             e.target.value = '';
-            if (!value || typeof onDifferentDatePicked !== 'function') return;
+            if (typeof onDifferentDatePicked !== 'function') return;
             onDifferentDatePicked(value);
           }}
         />
@@ -217,8 +227,6 @@ export default function LaunchMenu({
         </MenuButton>
 
         <MenuButton
-          as="label"
-          htmlFor={differentDateInputId}
           onClick={() => openHtmlDatePicker(differentDateInputRef.current)}
           icon="🗓"
           sublabel="Sistem tarih seçicisi (iPhone’da iOS ekranı)"
