@@ -35,6 +35,7 @@ export default function LaunchMenu({
 }) {
   const [showReviewOptions, setShowReviewOptions] = useState(false);
   const differentDateInputRef = useRef(null);
+  const differentDateInputId = 'launch-menu-different-date';
   const datePickMin = `${MIN_YEAR}-01-01`;
   const datePickMax = todayKey();
 
@@ -196,10 +197,11 @@ export default function LaunchMenu({
       <div className="space-y-3 max-w-2xl mx-auto">
         <input
           ref={differentDateInputRef}
+          id={differentDateInputId}
           type="date"
           min={datePickMin}
           max={datePickMax}
-          className="sr-only"
+          className="absolute w-px h-px opacity-0 pointer-events-none"
           tabIndex={-1}
           aria-label="Anı eklemek için tarih seçin"
           onChange={(e) => {
@@ -215,6 +217,8 @@ export default function LaunchMenu({
         </MenuButton>
 
         <MenuButton
+          as="label"
+          htmlFor={differentDateInputId}
           onClick={() => openHtmlDatePicker(differentDateInputRef.current)}
           icon="🗓"
           sublabel="Sistem tarih seçicisi (iPhone’da iOS ekranı)"
@@ -254,6 +258,8 @@ export default function LaunchMenu({
 }
 
 function MenuButton({
+  as = 'button',
+  htmlFor,
   onClick,
   children,
   emphasis = false,
@@ -261,9 +267,11 @@ function MenuButton({
   sublabel,
   'aria-expanded': ariaExpanded,
 }) {
+  const Component = as;
   return (
-    <button
-      type="button"
+    <Component
+      type={as === 'button' ? 'button' : undefined}
+      htmlFor={as === 'label' ? htmlFor : undefined}
       onClick={onClick}
       aria-expanded={ariaExpanded}
       className={`
@@ -317,7 +325,7 @@ function MenuButton({
       {emphasis && (
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
       )}
-    </button>
+    </Component>
   );
 }
 
