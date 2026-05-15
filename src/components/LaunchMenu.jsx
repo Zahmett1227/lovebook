@@ -11,7 +11,18 @@ import { MEMORY_TAGS } from '../config/memoryTags';
 import { daysTogetherCount, todayKey } from '../utils/dateUtils';
 import { useCoupleProfile } from '../hooks/useCoupleProfile';
 
-const DIFFERENT_DATE_INPUT_ID = 'launch-different-date-input';
+let datePickerOpenLockUntil = 0;
+
+function openNativeDatePicker(input) {
+  if (!input) return;
+  const now = Date.now();
+  if (now < datePickerOpenLockUntil) return;
+  datePickerOpenLockUntil = now + 600;
+  if (typeof input.showPicker === 'function') {
+    try { input.showPicker(); return; } catch { /* older iOS fallback */ }
+  }
+  input.click();
+}
 
 export default function LaunchMenu({
   onAddToday,
@@ -184,15 +195,12 @@ export default function LaunchMenu({
       </div>
 
       <div className="space-y-3 max-w-2xl mx-auto">
-        {/* iOS native date picker: label approach guarantees native picker on all iOS versions */}
         <input
-          id={DIFFERENT_DATE_INPUT_ID}
           ref={differentDateInputRef}
           type="date"
           min={datePickMin}
           max={datePickMax}
-          className="absolute w-px h-px opacity-0"
-          style={{ pointerEvents: 'none' }}
+          className="absolute w-px h-px opacity-0 pointer-events-none"
           tabIndex={-1}
           aria-label="Anı eklemek için tarih seçin"
           onChange={(e) => {
@@ -213,11 +221,10 @@ export default function LaunchMenu({
         </MenuButton>
 
         <MenuButton
-          as="label"
-          htmlFor={DIFFERENT_DATE_INPUT_ID}
+          onClick={() => openNativeDatePicker(differentDateInputRef.current)}
           variant="rose"
           icon="🗓"
-          sublabel="iOS native tarih seçici açılır"
+          sublabel="Tarih seçerek anı ekle"
         >
           Farklı bir güne anı ekle
         </MenuButton>
