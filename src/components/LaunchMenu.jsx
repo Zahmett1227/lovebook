@@ -11,24 +11,7 @@ import { MEMORY_TAGS } from '../config/memoryTags';
 import { daysTogetherCount, todayKey } from '../utils/dateUtils';
 import { useCoupleProfile } from '../hooks/useCoupleProfile';
 
-let datePickerOpenLockUntil = 0;
-
-function openHtmlDatePicker(input) {
-  if (!input) return;
-  const now = Date.now();
-  if (now < datePickerOpenLockUntil) return;
-  datePickerOpenLockUntil = now + 400;
-
-  if (typeof input.showPicker === 'function') {
-    try {
-      input.showPicker();
-      return;
-    } catch {
-      // Bazı tarayıcılar (özellikle eski iOS) showPicker’ı desteklemez veya güvenlik nedeniyle reddeder.
-    }
-  }
-  input.click();
-}
+const DIFFERENT_DATE_INPUT_ID = 'launch-different-date-input';
 
 export default function LaunchMenu({
   onAddToday,
@@ -201,12 +184,15 @@ export default function LaunchMenu({
       </div>
 
       <div className="space-y-3 max-w-2xl mx-auto">
+        {/* iOS native date picker: label approach guarantees native picker on all iOS versions */}
         <input
+          id={DIFFERENT_DATE_INPUT_ID}
           ref={differentDateInputRef}
           type="date"
           min={datePickMin}
           max={datePickMax}
-          className="absolute w-px h-px opacity-0 pointer-events-none"
+          className="absolute w-px h-px opacity-0"
+          style={{ pointerEvents: 'none' }}
           tabIndex={-1}
           aria-label="Anı eklemek için tarih seçin"
           onChange={(e) => {
@@ -222,26 +208,29 @@ export default function LaunchMenu({
           }}
         />
 
-        <MenuButton onClick={onAddToday} emphasis icon="✦" sublabel="Bugünün anısını ekle">
+        <MenuButton onClick={onAddToday} variant="amber" icon="✦" sublabel="Bugünün anısını ekle">
           Bugüne anı ekle
         </MenuButton>
 
         <MenuButton
-          onClick={() => openHtmlDatePicker(differentDateInputRef.current)}
+          as="label"
+          htmlFor={DIFFERENT_DATE_INPUT_ID}
+          variant="rose"
           icon="🗓"
-          sublabel="Sistem tarih seçicisi (iPhone’da iOS ekranı)"
+          sublabel="iOS native tarih seçici açılır"
         >
           Farklı bir güne anı ekle
         </MenuButton>
 
         <MenuButton
           onClick={() => setShowReviewOptions((p) => !p)}
+          variant="indigo"
           icon="📖"
           sublabel="Tüm anılarını incele"
           aria-expanded={showReviewOptions}
         >
           Anıları incele
-          <span className="ml-2 text-lb-subtext text-xs font-normal">
+          <span className="ml-2 text-white/60 text-xs font-normal">
             {showReviewOptions ? '▲' : '▼'}
           </span>
         </MenuButton>
@@ -265,17 +254,42 @@ export default function LaunchMenu({
   );
 }
 
+const VARIANT_STYLES = {
+  amber: {
+    wrap: 'bg-gradient-to-br from-amber-500/80 to-amber-600/75 border-amber-400/55 shadow-[0_8px_32px_rgba(245,158,11,0.35)] backdrop-blur-sm',
+    icon: 'bg-white/15 border-white/20',
+    text: 'text-white',
+    sub: 'text-white/65',
+    arrow: 'text-white/75',
+  },
+  rose: {
+    wrap: 'bg-gradient-to-br from-rose-500/78 to-pink-600/72 border-rose-400/50 shadow-[0_8px_32px_rgba(244,63,94,0.30)] backdrop-blur-sm',
+    icon: 'bg-white/15 border-white/20',
+    text: 'text-white',
+    sub: 'text-white/65',
+    arrow: 'text-white/75',
+  },
+  indigo: {
+    wrap: 'bg-gradient-to-br from-indigo-500/78 to-violet-600/72 border-indigo-400/50 shadow-[0_8px_32px_rgba(99,102,241,0.30)] backdrop-blur-sm',
+    icon: 'bg-white/15 border-white/20',
+    text: 'text-white',
+    sub: 'text-white/65',
+    arrow: 'text-white/75',
+  },
+};
+
 function MenuButton({
   as = 'button',
   htmlFor,
   onClick,
   children,
-  emphasis = false,
+  variant = 'amber',
   icon,
   sublabel,
   'aria-expanded': ariaExpanded,
 }) {
   const Component = as;
+  const v = VARIANT_STYLES[variant] ?? VARIANT_STYLES.amber;
   return (
     <Component
       type={as === 'button' ? 'button' : undefined}
@@ -286,53 +300,30 @@ function MenuButton({
         w-full rounded-[1.25rem] px-5 py-4 min-h-[64px]
         flex items-center gap-4
         border transition active:scale-[0.98] text-left
-        relative overflow-hidden
-        ${
-          emphasis
-            ? `bg-gradient-to-r from-lb-accent to-amber-400
-               border-lb-accent/50 text-lb-page
-               shadow-[0_8px_32px_rgba(227,176,92,0.35)]`
-            : `bg-gradient-to-br from-lb-elevated to-lb-surface
-               border-lb-border text-lb-text
-               hover:border-lb-accent/35
-               shadow-[0_4px_16px_rgba(0,0,0,0.25)]`
-        }
+        relative overflow-hidden cursor-pointer
+        ${v.wrap}
       `}
     >
       {icon && (
-        <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
-            emphasis ? 'bg-lb-page/20' : 'bg-lb-muted/60 border border-lb-border'
-          }`}
-        >
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border ${v.icon}`}>
           {icon}
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <div
-          className={`font-display text-[15px] font-semibold leading-tight ${
-            emphasis ? 'text-lb-page' : 'text-lb-text'
-          }`}
-        >
+        <div className={`font-display text-[15px] font-semibold leading-tight ${v.text}`}>
           {children}
         </div>
         {sublabel && (
-          <p
-            className={`font-hero-sub text-[11px] mt-0.5 ${
-              emphasis ? 'text-lb-page/60' : 'text-lb-subtext'
-            }`}
-          >
+          <p className={`font-hero-sub text-[11px] mt-0.5 ${v.sub}`}>
             {sublabel}
           </p>
         )}
       </div>
 
-      <span className={`text-lg flex-shrink-0 ${emphasis ? 'text-lb-page/70' : 'text-lb-accent'}`}>→</span>
+      <span className={`text-lg flex-shrink-0 ${v.arrow}`}>→</span>
 
-      {emphasis && (
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
-      )}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
     </Component>
   );
 }

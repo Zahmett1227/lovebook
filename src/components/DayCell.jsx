@@ -1,16 +1,6 @@
 import { isToday } from '../utils/dateUtils';
 import { memo } from 'react';
 
-const WEEKDAY_TONES = [
-  'bg-lb-elevated/70',
-  'bg-lb-elevated/55',
-  'bg-lb-elevated/80',
-  'bg-lb-elevated/60',
-  'bg-lb-elevated/75',
-  'bg-lb-elevated/50',
-  'bg-lb-elevated/65',
-];
-
 const INTENSITY_RING = {
   0: '',
   1: 'ring-1 ring-lb-accent/20',
@@ -18,6 +8,12 @@ const INTENSITY_RING = {
   3: 'ring-2 ring-lb-accent/65',
   4: 'ring-2 ring-lb-accent shadow-[0_0_10px_rgba(227,176,92,0.3)]',
 };
+
+// Day 1 → hsl(0) red/coral … Day 31 → hsl(300) purple/violet — full warm rainbow
+function getDayHsl(day) {
+  const hue = Math.round(((day - 1) / 30) * 300);
+  return { hue, color: `hsl(${hue},65%,72%)`, bg: `hsla(${hue},65%,72%,0.10)` };
+}
 
 function DayCell({
   dateKey,
@@ -34,15 +30,19 @@ function DayCell({
   }
 
   const today = isToday(dateKey);
-  const toneClass = WEEKDAY_TONES[weekdaySlot] ?? WEEKDAY_TONES[0];
   const safeIntensity = Math.min(Math.max(Number(intensity) || 0, 0), 4);
-  const intensityClass =
-    !isSelected && !today ? INTENSITY_RING[safeIntensity] ?? '' : '';
+  const intensityClass = !isSelected && !today ? INTENSITY_RING[safeIntensity] ?? '' : '';
+  const { color: dayColor, bg: dayBg } = getDayHsl(day);
+
+  const normalStyle = !isSelected && !today
+    ? { color: dayColor, backgroundColor: dayBg }
+    : {};
 
   return (
     <button
       type="button"
       onClick={() => onClick(dateKey)}
+      style={normalStyle}
       className={`
         day-cell h-11 min-h-[44px] rounded-[0.95rem] border text-sm font-medium relative flex flex-col items-center justify-center gap-0.5
         transition-all duration-150 select-none active:scale-[0.98]
@@ -51,7 +51,7 @@ function DayCell({
           ? 'bg-lb-accent border-lb-accent text-lb-page font-semibold shadow-[0_0_24px_rgba(227,176,92,0.4)] ring-2 ring-lb-accent/40'
           : today
           ? 'bg-lb-accent/12 border-lb-accent/50 text-lb-accent font-semibold ring-1 ring-lb-accent/25'
-          : `${toneClass} border-lb-border text-lb-text hover:border-lb-accent/35 hover:bg-lb-muted/60 ${intensityClass}`
+          : `border-lb-border/60 hover:border-lb-accent/35 ${intensityClass}`
         }
       `}
     >
